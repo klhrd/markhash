@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG 渲染與輸出工具</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-white min-h-screen flex flex-col items-center justify-start p-8">
+
+    <!-- 控制面板 -->
+    <div class="w-full max-w-[1024px] flex justify-between items-center mb-6">
+        <div class="flex gap-2 bg-gray-100 p-1 rounded-lg">
+            <button id="btnA" onclick="switchPath('A')" class="px-6 py-2 rounded-md font-bold transition-all bg-black text-white">路徑 A</button>
+            <button id="btnB" onclick="switchPath('B')" class="px-6 py-2 rounded-md font-bold transition-all text-gray-500 hover:bg-gray-200">路徑 B</button>
+        </div>
+        
+        <button onclick="exportPNG()" class="px-6 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors flex items-center gap-2">
+            <span>輸出為 1024x1024 PNG</span>
+        </button>
+    </div>
+
+    <!-- 畫布區域 (1024x1024) -->
+    <div id="canvas-container" class="border border-gray-200 bg-white" style="width: 1024px; height: 1024px;">
+        <svg id="mainSvg" width="1024" height="1024" viewBox="0 -900 1000 1000" xmlns="http://www.w3.org/2000/svg">
+            <path id="svgPath" fill="#000000" fill-rule="evenodd" d=""></path>
+        </svg>
+    </div>
+
+    <!-- 隱藏的 Canvas 用於轉換 PNG -->
+    <canvas id="exportCanvas" width="1024" height="1024" class="hidden"></canvas>
+
+    <script>
+        const paths = {
+            A: `M+520-420 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h+35 l+10-60 h+50 l+5-30 h-50 l+10-60 h+50 l+5-30 L+750-540 h-50 l+10-60 h-35 l-10+60 h-40 l+10-60 h-35 l-10+60 h-50 l-5+30 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h-40 h-35 h-50 l-5+30 Z M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm0 0v-480 480Zm60-120h60v-180h40v120h60v-120h40v180h60v-200q0-17-11.5-28.5T440-600H260q-17 0-28.5 11.5T220-560v200Z`,
+            B: `M+520-420 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h+35 l+10-60 h+50 L+750-420 L+750-450 L+685-450 L+695-510 L+750-510 L+750-540 L+750-540 h-50 l+10-60 h-35 l-10+60 h-40 l+10-60 h-35 l-10+60 h-50 l-5+30 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h-40 h-35 h-50 l-5+30 Z M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm0 0v-480 480Zm60-120h60v-180h40v120h60v-120h40v180h60v-200q0-17-11.5-28.5T440-600H260q-17 0-28.5 11.5T220-560v200Z`
+        };
+
+        let currentPath = 'A';
+
+        function switchPath(type) {
+            currentPath = type;
+            document.getElementById('svgPath').setAttribute('d', paths[type]);
+            
+            // UI 更新
+            const btnA = document.getElementById('btnA');
+            const btnB = document.getElementById('btnB');
+            
+            if (type === 'A') {
+                btnA.className = "px-6 py-2 rounded-md font-bold transition-all bg-black text-white";
+                btnB.className = "px-6 py-2 rounded-md font-bold transition-all text-gray-500 hover:bg-gray-200";
+            } else {
+                btnB.className = "px-6 py-2 rounded-md font-bold transition-all bg-black text-white";
+                btnA.className = "px-6 py-2 rounded-md font-bold transition-all text-gray-500 hover:bg-gray-200";
+            }
+        }
+
+        function exportPNG() {
+            const svg = document.getElementById('mainSvg');
+            const canvas = document.getElementById('exportCanvas');
+            const ctx = canvas.getContext('2d');
+            
+            // 序列化 SVG
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const svgBlob = new Blob([svgData], {type: 'image/svg+xml;charset=utf-8'});
+            const url = URL.createObjectURL(svgBlob);
+            
+            const img = new Image();
+            img.onload = function() {
+                ctx.clearRect(0, 0, 1024, 1024);
+                // 填滿背景為白色 (如果需要透明可註解掉)
+                ctx.fillStyle = "white";
+                ctx.fillRect(0, 0, 1024, 1024);
+                
+                ctx.drawImage(img, 0, 0, 1024, 1024);
+                
+                // 下載圖片
+                const pngUrl = canvas.toDataURL("image/png");
+                const downloadLink = document.createElement("a");
+                downloadLink.href = pngUrl;
+                downloadLink.download = `path_${currentPath}_1024.png`;
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                
+                URL.revokeObjectURL(url);
+            };
+            img.src = url;
+        }
+
+        // 初始化
+        window.onload = () => switchPath('A');
+    </script>
+</body>
+</html>
+
+<!--
+A
+```
+M+520-420 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h+35 l+10-60 h+50 
+l+5-30 h-50 l+10-60 h+50 l+5-30 
+L+750-540
+h-50 l+10-60 h-35 l-10+60 h-40 l+10-60 h-35 l-10+60 h-50  
+l-5+30 h+50 l-10+60 
+h+35 l+10-60 h+40 l-10+60 h-40 h-35
+h-50 l-5+30 
+Z
+M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm0 0v-480 480Zm60-120h60v-180h40v120h60v-120h40v180h60v-200q0-17-11.5-28.5T440-600H260q-17 0-28.5 11.5T220-560v200Z
+```
+
+B
+```
+M+520-420 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h+35 l+10-60 h+50 
+L+750-420 L+750-450 L+685-450 L+695-510 L+750-510 L+750-540  
+L+750-540
+h-50 l+10-60 h-35 l-10+60 h-40 l+10-60 h-35 l-10+60 h-50  
+l-5+30 h+50 l-10+60 
+h+35 l+10-60 h+40 l-10+60 h-40 h-35
+h-50 l-5+30 
+Z
+M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm0 0v-480 480Zm60-120h60v-180h40v120h60v-120h40v180h60v-200q0-17-11.5-28.5T440-600H260q-17 0-28.5 11.5T220-560v200Z
+```
+-->
