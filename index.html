@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MarkHash v5.0</title>
+    <title>MarkHash v5.2</title>
     
     <!-- PWA Settings -->
     <link rel="manifest" href="./manifest.json">
@@ -36,6 +36,8 @@
 
     <!-- 7. Google Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
+    <!-- 8. Google Sans Code (using Roboto Mono as an alternative if Google Sans Code is not directly available) -->
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
     <style>
         :root {
@@ -104,12 +106,16 @@
             gap: 6px;
             color: var(--text-primary);
             user-select: none;
+            /* Debugging: Add a border to see if the logo div is present */
+            border: 1px solid red; 
         }
 
         .logo svg {
             width: 24px;
             height: 24px;
-            fill: currentColor;
+            /* Debugging: Set a fixed fill color */
+            fill: blue; /* temporary fixed color */
+            /* fill: currentColor; */ /* original */
         }
 
         .controls {
@@ -214,7 +220,7 @@
 
         /* 容量計量條 */
         .url-stats {
-            font-family: monospace;
+            font-family: 'Roboto Mono', monospace; /* Applied Roboto Mono */
             font-size: 12px;
             display: flex;
             align-items: center;
@@ -251,6 +257,7 @@
             height: 100%;
             overflow: hidden;
             background: var(--bg-paper);
+            position: relative; /* Important for absolute positioning of editor-container */
         }
 
         #editorPanel {
@@ -260,14 +267,14 @@
         #editor {
             flex: 1;
             padding: 24px;
-            font-family: monospace; 
+            font-family: 'Roboto Mono', monospace !important; 
             font-size: 15px;
             line-height: 1.6;
             border: none;
             outline: none;
             resize: none;
             background: var(--bg-paper);
-            color: var(--text-primary);
+            color: var(--text-primary); /* For debugging: text should be visible now */
             width: 100%;
             overflow-y: auto;
             -webkit-overflow-scrolling: touch;
@@ -279,7 +286,7 @@
             word-wrap: break-word; /* Break long words */
             box-sizing: border-box; /* Include padding in element's total width and height */
             z-index: 2; /* Place textarea above highlighting layer */
-            color: transparent; /* Hide actual text in textarea */
+            /* Removed color: transparent; for debugging */
         }
 
         .editor-container {
@@ -298,17 +305,18 @@
             width: 100%;
             height: 100%;
             padding: 24px;
-            font-family: monospace;
+            font-family: 'Roboto Mono', monospace !important; /* Applied Roboto Mono */
             font-size: 15px;
             line-height: 1.6;
             overflow-y: auto;
-            pointer-events: none; /* Allow clicks to pass through to textarea */
+            pointer-events: none; 
             white-space: pre-wrap;
             word-wrap: break-word;
             box-sizing: border-box;
             color: var(--text-primary); /* Default text color for highlighting */
             padding-bottom: 80px; 
             padding-bottom: calc(80px + env(safe-area-inset-bottom));
+            z-index: 1; /* Place highlighting below textarea */
         }
 
         /* Syntax Highlighting Styles */
@@ -361,10 +369,6 @@
             font-family: system-ui, -apple-system, sans-serif !important;
             line-height: 1.8;
         }
-
-        .katex {
-            font-size: 1.1em;
-        }
         
         @media (prefers-color-scheme: dark) {
             .markdown-body {
@@ -377,6 +381,24 @@
             .markdown-body table tr { background-color: #1e1e1e; border-top-color: #333; }
             .markdown-body table tr:nth-child(2n) { background-color: #252525; }
         }
+
+
+        .katex {
+            font-size: 1.1em;
+        }
+        
+        /* moved .markdown-body dark mode adjustments inside prefers-color-scheme: dark */
+        /* @media (max-width: 768px) {
+            .markdown-body {
+                color-scheme: dark;
+            }
+            .markdown-body a { color: #58a6ff; }
+            .markdown-body blockquote { border-left-color: #333; color: #a3a3a3; }
+            .markdown-body code { background: rgba(255,255,255,0.1); }
+            .markdown-body pre { background: #161616; }
+            .markdown-body table tr { background-color: #1e1e1e; border-top-color: #333; }
+            .markdown-body table tr:nth-child(2n) { background-color: #252525; }
+        } */
 
         .mobile-switch-btn {
             display: none;
@@ -430,7 +452,7 @@
         <svg viewBox="0 0 1000 1000">
             <path d="M+520-420 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h+35 l+10-60 h+50 L+750-420 L+750-450 L+685-450 L+695-510 L+750-510 L+750-540 L+750-540 h-50 l+10-60 h-35 l-10+60 h-40 l+10-60 h-35 l-10+60 h-50 l-5+30 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h-40 h-35 h-50 l-5+30 Z M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm0 0v-480 480Zm60-120h60v-180h40v120h60v-120h40v180h60v-200q0-17-11.5-28.5T440-600H260q-17 0-28.5 11.5T220-560v200Z" />
         </svg>
-        <span>MarkHash v5.0</span>
+        <span>MarkHash v5.3</span>
     </div>
 
     <div class="controls">
