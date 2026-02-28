@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MarkHash v5.7</title>
+    <title>MarkHash v5.8</title>
     
     <!-- PWA Settings -->
     <link rel="manifest" href="./manifest.json">
@@ -98,7 +98,7 @@
         .logo-group {
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 10px;
         }
 
         .logo {
@@ -110,17 +110,19 @@
         }
 
         .logo svg {
-            width: 32px;
-            height: 32px;
+            width: 34px;
+            height: 34px;
             fill: currentColor;
         }
 
         .version-tag {
             font-family: 'Roboto Mono', monospace;
-            font-size: 14px;
-            font-weight: 500;
+            font-size: 13px;
+            font-weight: 700;
             color: var(--text-secondary);
-            padding-top: 2px;
+            background: var(--hover-bg);
+            padding: 2px 6px;
+            border-radius: 4px;
         }
 
         .controls {
@@ -171,8 +173,8 @@
         .url-stats.show-text span { display: inline; }
 
         .dot {
-            width: 8px;
-            height: 8px;
+            width: 10px;
+            height: 10px;
             border-radius: 50%;
             background-color: var(--success-color);
             box-shadow: 0 0 4px rgba(0,0,0,0.2);
@@ -192,6 +194,7 @@
             height: 100%;
             overflow: hidden;
             background: var(--bg-paper);
+            position: relative;
         }
 
         #editorPanel { border-right: 1px solid var(--border-color); }
@@ -239,10 +242,10 @@
             z-index: 1;
         }
 
-        /* 語法高亮樣式 (v5.7) */
+        /* 語法高亮樣式 (v5.8 修正) */
         .h-heading { color: #2563eb; font-weight: bold; }
-        .h-bold { color: #dc2626; font-weight: bold; }   
-        .h-italic { color: #059669; font-style: italic; } 
+        .h-bold { color: #dc2626; font-weight: bold; }   /* 粗體: 紅色 */
+        .h-italic { color: #059669; font-style: italic; } /* 斜體: 綠色 */
         .h-code { color: #d97706; background-color: rgba(217, 119, 6, 0.1); padding: 0 2px; border-radius: 3px; }
         .h-list { color: #7c3aed; }
         .h-quote { color: #64748b; font-style: italic; border-left: 2px solid #cbd5e1; padding-left: 4px; }
@@ -336,7 +339,7 @@
                 <path d="M+520-420 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h+35 l+10-60 h+50 L+750-420 L+750-450 L+685-450 L+695-510 L+750-510 L+750-540 L+750-540 h-50 l+10-60 h-35 l-10+60 h-40 l+10-60 h-35 l-10+60 h-50 l-5+30 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h-40 h-35 h-50 l-5+30 Z M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm0 0v-480 480Zm60-120h60v-180h40v120h60v-120h40v180h60v-200q0-17-11.5-28.5T440-600H260q-17 0-28.5 11.5T220-560v200Z" />
             </svg>
         </div>
-        <div class="version-tag">v5.7</div>
+        <div class="version-tag">v5.8</div>
     </div>
 
     <div class="controls">
@@ -371,12 +374,16 @@
     <section class="panel active" id="editorPanel">
         <div class="editor-container">
             <div id="editor-highlighting"></div>
-            <textarea id="editor" placeholder="# v5.7 測試
-這是*斜體*內容。
-這是**粗體**內容。
-*緊貼斜體*
-**緊貼粗體**
-*混合**粗體**斜體*" spellcheck="false" wrap="off"></textarea>
+            <textarea id="editor" placeholder="# v5.8 語法測試
+這是 *斜體文字* (應為綠色)
+這是 **粗體文字** (應為紅色)
+這是 ***粗斜體*** (混合測試)
+
+緊貼測試：
+這裡有*斜體*內容。
+這裡有**粗體**內容。
+*緊貼開頭斜體
+**緊貼開頭粗體" spellcheck="false" wrap="off"></textarea>
         </div>
     </section>
     <section class="panel" id="previewPanel">
@@ -391,7 +398,7 @@
     const editorHighlighting = document.getElementById('editor-highlighting');
     const preview = document.getElementById('preview');
     
-    // 語法高亮 (v5.7 優化正則，支援無空格渲染)
+    // v5.8 語法高亮優化：徹底分離粗體與斜體
     function highlightContent() {
         const text = editor.value;
         let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
@@ -399,14 +406,13 @@
         // 1. 區塊程式碼
         html = html.replace(/(```[\s\S]*?```)/g, '<span class="h-code">$1</span>');
 
-        // 2. 粗體 (修正：支援緊貼文字，並優先於斜體處理)
-        // 使用 [^\s\*] 確保不匹配空格開頭，並確保前後匹配對稱
-        html = html.replace(/(\*\*)([^\s\*][^\*]*?[^\s\*]|[^\s\*])\1/g, '<span class="h-bold">$1$2$1</span>');
-        html = html.replace(/(__)([^\s_][^_]*?[^\s_]|[^\s_])\1/g, '<span class="h-bold">$1$2$1</span>');
+        // 2. 粗體 (優先處理，確保不被斜體誤吃)
+        html = html.replace(/(\*\*|__)(?=\S)(.+?)(?<=\S)\1/g, '<span class="h-bold">$1$2$1</span>');
 
-        // 3. 斜體 (修正：支援緊貼文字)
-        html = html.replace(/(\*)([^\s\*][^\*]*?[^\s\*]|[^\s\*])\1/g, '<span class="h-italic">$1$2$1</span>');
-        html = html.replace(/(_)([^\s_][^_]*?[^\s_]|[^\s_])\1/g, '<span class="h-italic">$1$2$1</span>');
+        // 3. 斜體 (使用負向斷言，確保不匹配粗體符號)
+        // 匹配單個 * 或 _，但前後不能也是 * 或 _
+        html = html.replace(/(?<!\*)\*([^\s\*](?:.*?[^\s\*])?)\*(?!\*)/g, '<span class="h-italic">*$1*</span>');
+        html = html.replace(/(?<!_)_([^\s_](?:.*?[^\s_])?)_(?!_)/g, '<span class="h-italic">_$1_</span>');
 
         // 4. 其他語法
         html = html.replace(/`([^`]+)`/g, '<span class="h-code">`$1`</span>');
@@ -438,7 +444,6 @@
         const fullLength = window.location.href.length;
         document.getElementById('sizeText').innerText = fullLength + ' chars';
         
-        // v5.7 指示燈邏輯優化：寬鬆的綠色範圍
         const dot = document.getElementById('sizeDot');
         if (fullLength < 4000) {
             dot.style.backgroundColor = 'var(--success-color)';
