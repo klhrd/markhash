@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MarkHash v6.9</title>
+    <title>MarkHash v6.10</title>
     
     <!-- PWA Settings -->
     <link rel="manifest" href="./manifest.json">
@@ -145,7 +145,7 @@
                 <path d="M 40 60 h 50 l -10 60 h 35 l 10 -60 h 40 l -10 60 h 35 l 10 -60 h 50 L 270 60 L 270 30 L 205 30 L 215 -30 L 270 -30 L 270 -60 L 270 -60 h -50 l 10 -60 h -35 l -10 60 h -40 l 10 -60 h -35 l -10 60 h -50 l -5 30 h 50 l -10 60 h 35 l 10 -60 h 40 l -10 60 h -40 h -35 h -50 l -5 30 Z M -320 320 q -33 0 -56.5 -23.5 T -400 240 v -480 q 0 -33 23.5 -56.5 T -320 -320 h 640 q 33 0 56.5 23.5 T 400 -240 v 480 q 0 33 -23.5 56.5 T 320 320 H -320 Z m 0 -80 h 640 v -480 H -320 v 480 Z m 0 0 v -480 v 480 Z m 60 -120 h 60 v -180 h 40 v 120 h 60 v -120 h 40 v 180 h 60 v -200 q 0 -17 -11.5 -28.5 T -40 -120 H -220 q -17 0 -28.5 11.5 T -260 -80 v 200 Z" />
             </svg>
         </div>
-        <div class="version-tag">v6.9</div>
+        <div class="version-tag">v6.10</div>
     </div>
 
     <div class="controls">
@@ -161,11 +161,11 @@
             <div class="dropdown-menu" id="fileMenu">
                 <button class="dropdown-item" onclick="triggerUpload()">
                     <span class="material-symbols-outlined" style="font-size: 20px;">upload_file</span>
-                    <span>匯入</span>
+                    <span>匯入 (Import)</span>
                 </button>
                 <button class="dropdown-item" onclick="downloadFile()">
                     <span class="material-symbols-outlined" style="font-size: 20px;">save_alt</span>
-                    <span>下載</span>
+                    <span>匯出 (Export)</span>
                 </button>
             </div>
         </div>
@@ -174,11 +174,15 @@
             <div class="dropdown-menu" id="shareMenu">
                 <button class="dropdown-item" onclick="copyOriginalUrl()">
                     <span class="material-symbols-outlined" style="font-size: 20px;">link</span>
-                    <span>複製長連結</span>
+                    <span>原始長連結</span>
                 </button>
-                <button class="dropdown-item" onclick="shortenUrl()">
+                <button class="dropdown-item" onclick="shortenUrl('isgd')">
                     <span class="material-symbols-outlined" style="font-size: 20px;">bolt</span>
                     <span>Is.gd 縮網址</span>
+                </button>
+                <button class="dropdown-item" onclick="shortenUrl('tinyurl')">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">compress</span>
+                    <span>TinyURL 縮網址</span>
                 </button>
             </div>
         </div>
@@ -189,8 +193,12 @@
     <section class="panel active" id="editorPanel">
         <div class="editor-container">
             <div id="editor-highlighting"></div>
-            <textarea id="editor" spellcheck="false" placeholder="# v6.9 高性能渲染測試
-| ***粗斜體*** | `***粗斜體***` | ***粗斜體*** |"></textarea>
+            <textarea id="editor" spellcheck="false" placeholder="# v6.10 高性能渲染更新
+- **粗體文字** __粗體文字__
+- *斜體文字* _斜體文字_
+- ***粗斜體*** ___粗斜體___
+- ~~刪除線文字~~
+"></textarea>
         </div>
     </section>
     <section class="panel" id="previewPanel">
@@ -207,14 +215,17 @@
     const sizeText = document.getElementById('sizeText');
     const sizeDot = document.getElementById('sizeDot');
     
-    // v6.9 Web Worker: 僅負責 Markdown 解析與 URL 壓縮
+    // v6.10 Web Worker: Markdown 解析與 URL 壓縮
     const workerScript = `
         importScripts('https://cdn.jsdelivr.net/npm/marked/marked.min.js', 
                       'https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js',
                       'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js',
                       'https://cdn.jsdelivr.net/npm/marked-katex-extension/lib/index.umd.js');
         
-        try { marked.use(self.markedKatex({ throwOnError: false })); } catch(e) {}
+        try { 
+            marked.use(self.markedKatex({ throwOnError: false })); 
+            marked.use({ gfm: true, breaks: true });
+        } catch(e) {}
 
         self.onmessage = function(e) {
             const { text } = e.data;
@@ -230,7 +241,6 @@
 
     worker.onmessage = (e) => {
         const { html, hash, len } = e.data;
-        // 在主執行緒進行安全過濾，避免 Worker 環境 DOM 缺失問題
         preview.innerHTML = DOMPurify.sanitize(html, {
             USE_PROFILES: { html: true, mathMl: true, svg: true },
             ADD_ATTR: ['mathvariant', 'display']
@@ -256,27 +266,36 @@
             return id;
         }
 
+        // 1. 保護代碼塊與數學公式
         html = html.replace(/```[\s\S]*?```/g, m => addP(`<span class="h-code">${m}</span>`));
         html = html.replace(/\$\$[\s\S]*?\$\$/g, m => addP(`<span class="h-math">${m}</span>`));
         html = html.replace(/`[^`\n]+`/g, m => addP(`<span class="h-code">${m}</span>`));
-        // Use a compatible regex for math inline
         html = html.replace(/\$([^\$\n]+?)\$/g, m => addP(`<span class="h-math">${m}</span>`));
 
-        // Styling: Support 1 or more characters inside delimiters
-        html = html.replace(/(\*\*\*|___)(?=\S)([\s\S]*?\S)\1/g, '<span class="h-bold-italic">$1$2$1</span>');
-        html = html.replace(/(\*\*|__)(?=\S)([\s\S]*?\S)\1/g, '<span class="h-bold">$1$2$1</span>');
-        html = html.replace(/(\*|_)(?=\S)([\s\S]*?\S)\1/g, '<span class="h-italic">$1$2$1</span>');
-        html = html.replace(/(~~)(?=\S)([\s\S]*?\S)\1/g, '<span class="h-strikethrough">$1$2$1</span>');
+        // 2. 格式化：使用佔位符機制防止衝突
+        const formatP = (m, cls) => addP(`<span class="${cls}">${m}</span>`);
         
+        // 粗斜體 (需優先匹配)
+        html = html.replace(/(\*\*\*|___)(?=\S)([\s\S]*?\S)\1/g, m => formatP(m, 'h-bold-italic'));
+        // 粗體
+        html = html.replace(/(\*\*|__)(?=\S)([\s\S]*?\S)\1/g, m => formatP(m, 'h-bold'));
+        // 斜體
+        html = html.replace(/(\*|_)(?=\S)([\s\S]*?\S)\1/g, m => formatP(m, 'h-italic'));
+        // 刪除線
+        html = html.replace(/(~~)(?=\S)([\s\S]*?\S)\1/g, m => formatP(m, 'h-strikethrough'));
+        
+        // 3. 區塊結構 (不使用佔位符，因為它們位於行首)
         html = html.replace(/^(\s*([-*+]|\d+\.)\s+)(.*)/gm, '<span class="h-list">$1</span>$3');
         html = html.replace(/^(#+)(.*)/gm, '<span class="h-heading">$1$2</span>');
         html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<span class="h-link-text">[$1]</span>($2)');
         html = html.replace(/^(\s*>\s*)(.*)/gm, '<span class="h-quote">$1$2</span>');
 
+        // 4. 恢復所有佔位符
         if (placeholders.size > 0) {
             const re = new RegExp(Array.from(placeholders.keys()).join('|'), 'g');
             html = html.replace(re, m => placeholders.get(m));
         }
+        
         editorHighlighting.innerHTML = html + '\n';
     }
 
@@ -317,20 +336,39 @@
 
     function copyOriginalUrl() { copyToClipboard(window.location.href); }
     
-    async function shortenUrl() {
+    async function shortenUrl(service = 'isgd') {
         showToast("產出中...");
         try {
-            const apiUrl = `https://is.gd/create.php?format=json&url=${encodeURIComponent(window.location.href)}`;
+            let apiUrl = "";
+            const longUrl = window.location.href;
+            if (service === 'isgd') {
+                apiUrl = `https://is.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}`;
+            } else {
+                apiUrl = `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`;
+            }
+            
             const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`);
             const d = await r.json();
-            const s = JSON.parse(d.contents).shorturl;
-            if (s) copyToClipboard(s);
+            
+            let shortUrl = "";
+            if (service === 'isgd') {
+                shortUrl = JSON.parse(d.contents).shorturl;
+            } else {
+                shortUrl = d.contents.trim();
+            }
+            
+            if (shortUrl && shortUrl.startsWith('http')) {
+                copyToClipboard(shortUrl);
+            } else {
+                throw new Error("Invalid response");
+            }
         } catch (e) { showToast("失敗"); }
     }
 
     function triggerUpload() { document.getElementById('fileInput').click(); }
     document.getElementById('fileInput').onchange = (e) => {
         const r = new FileReader();
+        if (!e.target.files[0]) return;
         r.onload = (ev) => { editor.value = ev.target.result; editor.dispatchEvent(new Event('input')); };
         r.readAsText(e.target.files[0]);
     };
