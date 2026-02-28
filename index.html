@@ -41,28 +41,28 @@
 
     <style>
         :root {
-            --bg-body: #dadada;       
-            --bg-paper: #ffffff;      
-            --text-primary: #111827;  
-            --text-secondary: #4b5563;
-            --border-color: #cbd5e1;  
-            --accent-color: #3b82f6;  
-            --hover-bg: rgba(0, 0, 0, 0.05);
-            --success-color: #10b981;
-            --warning-color: #f59e0b;
-            --danger-color: #ef4444;
-            --dropdown-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            --bg-body: #dadada;       /* 頁面背景 */
+            --bg-paper: #ffffff;      /* 面板背景 */
+            --text-primary: #111827;  /* 主要文字 */
+            --text-secondary: #4b5563;/* 次要文字 */
+            --border-color: #cbd5e1;  /* 邊框顏色 */
+            --accent-color: #3b82f6;  /* 強調顏色 */
+            --hover-bg: rgba(0, 0, 0, 0.05); /* 懸停背景 */
+            --success-color: #10b981; /* 成功顏色 */
+            --warning-color: #f59e0b; /* 警告顏色 */
+            --danger-color: #ef4444;  /* 危險顏色 */
+            --dropdown-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1); /* 下拉陰影 */
         }
 
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-body: #0f172a;       
-                --bg-paper: #1e293b;      
-                --text-primary: #f8fafc;  
-                --text-secondary: #94a3b8;
-                --border-color: #334155;
-                --hover-bg: rgba(255, 255, 255, 0.08);
-                --dropdown-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
+                --bg-body: #0f172a;       /* 頁面背景 - 深色 */
+                --bg-paper: #1e293b;      /* 面板背景 - 深色 */
+                --text-primary: #f8fafc;  /* 主要文字 - 深色 */
+                --text-secondary: #94a3b8;/* 次要文字 - 深色 */
+                --border-color: #334155;  /* 邊框顏色 - 深色 */
+                --hover-bg: rgba(255, 255, 255, 0.08); /* 懸停背景 - 深色 */
+                --dropdown-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3); /* 下拉陰影 - 深色 */
             }
         }
 
@@ -160,6 +160,8 @@
         .h-heading { color: #2563eb; font-weight: bold; }
         .h-bold { color: #dc2626; font-weight: bold; }
         .h-italic { color: #059669; font-style: italic; }
+        .h-bold-italic { color: #dc2626; font-weight: bold; font-style: italic; }
+        .h-strikethrough { text-decoration: line-through; opacity: 0.6; }
         .h-code { color: #d97706; background-color: rgba(217, 119, 6, 0.1); }
         .h-list { color: #8b5cf6; font-weight: bold; }
         .h-quote { color: #64748b; font-style: italic; border-left: 2px solid #cbd5e1; padding-left: 4px; }
@@ -169,6 +171,7 @@
         @media (prefers-color-scheme: dark) {
             .h-bold { color: #f87171; }
             .h-italic { color: #34d399; }
+            .h-bold-italic { color: #f87171; }
             .h-heading { color: #60a5fa; }
             .h-math { color: #e879f9; }
         }
@@ -178,6 +181,15 @@
             background: transparent !important; color: var(--text-primary) !important;
             font-family: system-ui, -apple-system, sans-serif !important; line-height: 1.8;
         }
+
+        /* KaTeX 修正：確保區塊公式透明且顏色正確 */
+        .katex-display {
+            background: transparent !important;
+            color: inherit;
+            padding: 10px 0;
+            margin: 0.5em 0;
+        }
+        .katex { font-size: 1.1em; color: inherit; }
 
         .dropdown-menu {
             position: absolute; top: 100%; right: 0; background-color: var(--bg-paper);
@@ -274,49 +286,49 @@ $$" spellcheck="false" wrap="off"></textarea>
     const editorHighlighting = document.getElementById('editor-highlighting');
     const preview = document.getElementById('preview');
     
-    // v6.1 語法高亮 (優化區塊處理)
+    // v6.2 高性能渲染系統
     function highlightContent() {
         const text = editor.value;
+        // 轉義 HTML 特殊字元
         let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         
-        // 使用預預留位處理區塊，避免嵌套標籤衝突
-        const placeholders = [];
-        let i = 0;
+        const placeholders = new Map();
+        let counter = 0;
 
-        // 1. 處理程式碼區塊 ```
-        html = html.replace(/(```[\s\S]*?```)/g, (match) => {
-            const id = `__CODE_${i++}__`;
-            placeholders.push({ id, content: `<span class="h-code">${match}</span>` });
+        // 預留位產生器 (使用 PUA 字元確保不與 Markdown 衝突)
+        function addPlaceholder(content) {
+            const id = `\uE000${counter++}\uE001`;
+            placeholders.set(id, content);
             return id;
-        });
+        }
 
-        // 2. 處理 LaTeX 塊級 $$
-        html = html.replace(/(\$\$[\s\S]*?\$\$)/g, (match) => {
-            const id = `__MATH_B_${i++}__`;
-            placeholders.push({ id, content: `<span class="h-math">${match}</span>` });
-            return id;
-        });
+        // 1. 結構保護階段：先處理「不可嵌套其他樣式」的區塊
+        // 程式碼區塊
+        html = html.replace(/```[\s\S]*?```/g, m => addPlaceholder(`<span class="h-code">${m}</span>`));
+        // LaTeX 塊級公式
+        html = html.replace(/\$\$[\s\S]*?\$\$/g, m => addPlaceholder(`<span class="h-math">${m}</span>`));
+        // 行內程式碼 (優先處理以防止內部的 ** 等被渲染)
+        html = html.replace(/`[^`\n]+`/g, m => addPlaceholder(`<span class="h-code">${m}</span>`));
+        // LaTeX 行內公式
+        html = html.replace(/(?<![\$\\])\$([^\$\n]+?)\$(?!\$)/g, m => addPlaceholder(`<span class="h-math">${m}</span>`));
 
-        // 3. 處理 LaTeX 行內 $
-        html = html.replace(/(?<![\$\\])\$([^\$\n]+?)\$(?!\$)/g, (match) => {
-            const id = `__MATH_I_${i++}__`;
-            placeholders.push({ id, content: `<span class="h-math">${match}</span>` });
-            return id;
-        });
-
-        // 4. 處理其他行級語法
-        html = html.replace(/(\*\*)([^\s\*][^\*]*?[^\s\*]|[^\s\*])\1/g, '<span class="h-bold">$1$2$1</span>');
+        // 2. 樣式渲染階段：處理剩餘的行級語法
+        html = html.replace(/(\*\*\*|___)([\s\S]+?)\1/g, '<span class="h-bold-italic">$1$2$1</span>');
+        html = html.replace(/(\*\*|__)([\s\S]+?)\1/g, '<span class="h-bold">$1$2$1</span>');
         html = html.replace(/(?<!\*)\*([^\s\*](?:.*?[^\s\*])?)\*(?!\*)/g, '<span class="h-italic">*$1*</span>');
+        html = html.replace(/(?<!_)_([^\s_](?:.*?[^\s_])?)_(?!_)/g, '<span class="h-italic">_$1_</span>');
+        html = html.replace(/(~~)([\s\S]+?)\1/g, '<span class="h-strikethrough">$1$2$1</span>');
+        
         html = html.replace(/^(\s*([-*+]|\d+\.)\s+)(.*)/gm, '<span class="h-list">$1</span>$3');
-        html = html.replace(/`([^`]+)`/g, '<span class="h-code">`$1`</span>');
         html = html.replace(/^(#+)(.*)/gm, '<span class="h-heading">$1$2</span>');
         html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<span class="h-link-text">[$1]</span>($2)');
         html = html.replace(/^(\s*>\s*)(.*)/gm, '<span class="h-quote">$1$2</span>');
 
-        // 5. 將預留位換回
-        placeholders.forEach(p => {
-            html = html.replace(p.id, p.content);
-        });
+        // 3. 還原階段：單次正規表達式匹配還原所有預留位 (高效能)
+        if (placeholders.size > 0) {
+            const re = new RegExp(Array.from(placeholders.keys()).join('|'), 'g');
+            html = html.replace(re, matched => placeholders.get(matched));
+        }
 
         editorHighlighting.innerHTML = html + '\n';
     }
@@ -354,19 +366,27 @@ $$" spellcheck="false" wrap="off"></textarea>
         }
     });
 
-    const debouncedUpdate = debounce(() => {
+    const updatePreview = () => {
         const raw = editor.value;
-        // v6.1 DOMPurify 設定：允許 KaTeX 特有的標籤與屬性
         const clean = DOMPurify.sanitize(marked.parse(raw), {
             USE_PROFILES: { html: true, mathMl: true, svg: true },
             ADD_ATTR: ['mathvariant', 'display']
         });
         preview.innerHTML = clean;
         highlightContent();
-        updateHash();
-    }, 150);
+        
+        const len = raw.length;
+        document.getElementById('sizeText').innerText = len + ' chars';
+    };
 
-    editor.addEventListener('input', debouncedUpdate);
+    const debouncedUpdate = debounce(updatePreview, 100);
+    const debouncedHash = debounce(updateHash, 800);
+
+    editor.addEventListener('input', () => {
+        debouncedUpdate();
+        debouncedHash();
+    });
+
     editor.addEventListener('scroll', () => { editorHighlighting.scrollTop = editor.scrollTop; });
 
     function debounce(func, wait) {
