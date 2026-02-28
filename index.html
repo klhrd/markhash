@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MarkHash v5.8</title>
+    <title>MarkHash v6.0</title>
     
     <!-- PWA Settings -->
     <link rel="manifest" href="./manifest.json">
@@ -41,7 +41,6 @@
 
     <style>
         :root {
-            /* 淺色模式 */
             --bg-body: #dadada;       
             --bg-paper: #ffffff;      
             --text-primary: #111827;  
@@ -49,7 +48,6 @@
             --border-color: #cbd5e1;  
             --accent-color: #3b82f6;  
             --hover-bg: rgba(0, 0, 0, 0.05);
-            
             --success-color: #10b981;
             --warning-color: #f59e0b;
             --danger-color: #ef4444;
@@ -101,19 +99,7 @@
             gap: 10px;
         }
 
-        .logo {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: var(--text-primary);
-            user-select: none;
-        }
-
-        .logo svg {
-            width: 34px;
-            height: 34px;
-            fill: currentColor;
-        }
+        .logo svg { width: 34px; height: 34px; fill: currentColor; }
 
         .version-tag {
             font-family: 'Roboto Mono', monospace;
@@ -125,199 +111,104 @@
             border-radius: 4px;
         }
 
-        .controls {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
+        .controls { display: flex; align-items: center; gap: 12px; }
 
         button.icon-btn {
-            background: transparent;
-            border: none;
-            color: var(--text-secondary);
-            width: 36px;
-            height: 36px;
-            border-radius: 8px;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: transparent; border: none; color: var(--text-secondary);
+            width: 36px; height: 36px; border-radius: 8px; cursor: pointer;
+            display: flex; align-items: center; justify-content: center;
             transition: all 0.2s ease;
         }
+        button.icon-btn:hover { background-color: var(--hover-bg); color: var(--text-primary); }
 
-        button.icon-btn:hover {
-            background-color: var(--hover-bg);
-            color: var(--text-primary);
-        }
-
-        /* 狀態指示燈 */
         .url-stats {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            cursor: pointer;
-            padding: 6px 10px;
-            border-radius: 20px;
-            transition: background 0.2s;
+            display: flex; align-items: center; gap: 8px; cursor: pointer;
+            padding: 6px 10px; border-radius: 20px; transition: background 0.2s;
         }
-        
         .url-stats:hover { background: var(--hover-bg); }
-
         .url-stats span {
-            font-family: 'Roboto Mono', monospace;
-            font-size: 12px;
-            display: none; 
-            color: var(--text-primary);
+            font-family: 'Roboto Mono', monospace; font-size: 12px;
+            display: none; color: var(--text-primary);
         }
-        
         .url-stats.show-text span { display: inline; }
 
         .dot {
-            width: 10px;
-            height: 10px;
-            border-radius: 50%;
+            width: 10px; height: 10px; border-radius: 50%;
             background-color: var(--success-color);
             box-shadow: 0 0 4px rgba(0,0,0,0.2);
             transition: background-color 0.3s;
         }
 
-        .container {
-            display: flex;
-            flex: 1;
-            overflow: hidden;
-        }
+        .container { display: flex; flex: 1; overflow: hidden; }
 
         .panel {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            height: 100%;
-            overflow: hidden;
-            background: var(--bg-paper);
+            flex: 1; display: flex; flex-direction: column;
+            height: 100%; overflow: hidden; background: var(--bg-paper);
             position: relative;
         }
-
         #editorPanel { border-right: 1px solid var(--border-color); }
 
-        .editor-container {
-            position: relative;
-            flex: 1;
-            background: var(--bg-paper);
-        }
+        .editor-container { position: relative; flex: 1; background: var(--bg-paper); }
 
         #editor {
-            width: 100%;
-            height: 100%;
-            padding: 24px;
+            width: 100%; height: 100%; padding: 24px;
             font-family: 'Roboto Mono', monospace !important; 
-            font-size: 15px;
-            line-height: 1.6;
-            border: none;
-            outline: none;
-            resize: none;
-            background: transparent !important;
-            color: transparent !important;
-            caret-color: var(--text-primary);
-            white-space: pre-wrap; 
-            word-wrap: break-word; 
-            z-index: 2;
-            position: relative;
+            font-size: 15px; line-height: 1.6; border: none; outline: none;
+            resize: none; background: transparent !important;
+            color: transparent !important; caret-color: var(--text-primary);
+            white-space: pre-wrap; word-wrap: break-word; 
+            z-index: 2; position: relative;
         }
 
         #editor-highlighting {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            padding: 24px;
-            font-family: 'Roboto Mono', monospace !important;
-            font-size: 15px;
-            line-height: 1.6;
-            overflow-y: hidden;
-            pointer-events: none;
-            white-space: pre-wrap;
-            word-wrap: break-word;
-            color: var(--text-primary);
-            z-index: 1;
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            padding: 24px; font-family: 'Roboto Mono', monospace !important;
+            font-size: 15px; line-height: 1.6; overflow-y: hidden;
+            pointer-events: none; white-space: pre-wrap; word-wrap: break-word;
+            color: var(--text-primary); z-index: 1;
         }
 
-        /* 語法高亮樣式 (v5.8 修正) */
+        /* 語法高亮樣式區 */
         .h-heading { color: #2563eb; font-weight: bold; }
-        .h-bold { color: #dc2626; font-weight: bold; }   /* 粗體: 紅色 */
-        .h-italic { color: #059669; font-style: italic; } /* 斜體: 綠色 */
+        .h-bold { color: #dc2626; font-weight: bold; }
+        .h-italic { color: #059669; font-style: italic; }
         .h-code { color: #d97706; background-color: rgba(217, 119, 6, 0.1); padding: 0 2px; border-radius: 3px; }
-        .h-list { color: #7c3aed; }
+        .h-list { color: #8b5cf6; font-weight: bold; } /* 清單專用色: 紫色 */
         .h-quote { color: #64748b; font-style: italic; border-left: 2px solid #cbd5e1; padding-left: 4px; }
         .h-link-text { color: #0891b2; text-decoration: underline; }
-        .h-link-url { color: #0891b2; opacity: 0.6; }
-        .h-hr { color: #94a3b8; }
         .h-math { color: #c026d3; }
 
         @media (prefers-color-scheme: dark) {
             .h-bold { color: #f87171; }
             .h-italic { color: #34d399; }
-            .h-heading { color: #60a5fa; }
+            .h-list { color: #a78bfa; }
         }
 
-        #preview-container {
-            flex: 1;
-            overflow-y: auto;
-            padding: 32px 48px;
-        }
-
+        #preview-container { flex: 1; overflow-y: auto; padding: 32px 48px; }
         .markdown-body {
-            background: transparent !important;
-            color: var(--text-primary) !important;
-            font-family: system-ui, -apple-system, sans-serif !important;
-            line-height: 1.8;
+            background: transparent !important; color: var(--text-primary) !important;
+            font-family: system-ui, -apple-system, sans-serif !important; line-height: 1.8;
         }
 
         .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            background-color: var(--bg-paper);
-            border: 1px solid var(--border-color);
-            border-radius: 12px;
-            box-shadow: var(--dropdown-shadow);
-            min-width: 180px;
-            display: none;
-            flex-direction: column;
-            padding: 8px;
-            z-index: 1000;
+            position: absolute; top: 100%; right: 0; background-color: var(--bg-paper);
+            border: 1px solid var(--border-color); border-radius: 12px;
+            box-shadow: var(--dropdown-shadow); min-width: 180px;
+            display: none; flex-direction: column; padding: 8px; z-index: 1000;
         }
         .dropdown-menu.show { display: flex; }
-
         .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
-            border: none;
-            background: transparent;
-            color: var(--text-primary);
-            cursor: pointer;
-            text-align: left;
-            font-size: 14px;
-            border-radius: 6px;
-            width: 100%;
+            display: flex; align-items: center; gap: 12px; padding: 10px 12px;
+            border: none; background: transparent; color: var(--text-primary);
+            cursor: pointer; text-align: left; font-size: 14px; border-radius: 6px; width: 100%;
         }
         .dropdown-item:hover { background-color: var(--hover-bg); }
 
         #toast {
-            position: fixed;
-            bottom: 32px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--text-primary);
-            color: var(--bg-paper);
-            padding: 12px 24px;
-            border-radius: 12px;
-            font-size: 14px;
-            opacity: 0;
-            transition: opacity 0.3s;
-            z-index: 2000;
+            position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%);
+            background: var(--text-primary); color: var(--bg-paper);
+            padding: 12px 24px; border-radius: 12px; font-size: 14px;
+            opacity: 0; transition: opacity 0.3s; z-index: 2000;
         }
         #toast.show { opacity: 1; }
 
@@ -339,7 +230,7 @@
                 <path d="M+520-420 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h+35 l+10-60 h+50 L+750-420 L+750-450 L+685-450 L+695-510 L+750-510 L+750-540 L+750-540 h-50 l+10-60 h-35 l-10+60 h-40 l+10-60 h-35 l-10+60 h-50 l-5+30 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h-40 h-35 h-50 l-5+30 Z M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm0 0v-480 480Zm60-120h60v-180h40v120h60v-120h40v180h60v-200q0-17-11.5-28.5T440-600H260q-17 0-28.5 11.5T220-560v200Z" />
             </svg>
         </div>
-        <div class="version-tag">v5.8</div>
+        <div class="version-tag">v6.0</div>
     </div>
 
     <div class="controls">
@@ -347,11 +238,9 @@
             <div class="dot" id="sizeDot"></div>
             <span id="sizeText">0 chars</span>
         </div>
-
         <button class="icon-btn" id="toggleViewBtn" onclick="toggleMobileView()">
             <span class="material-symbols-outlined" id="toggleIcon">visibility</span>
         </button>
-
         <div class="dropdown">
             <button class="icon-btn" onclick="toggleMenu('fileMenu')"><span class="material-symbols-outlined">save</span></button>
             <div class="dropdown-menu" id="fileMenu">
@@ -359,7 +248,6 @@
                 <button class="dropdown-item" onclick="downloadFile()">下載</button>
             </div>
         </div>
-
         <div class="dropdown">
             <button class="icon-btn" onclick="toggleMenu('shareMenu')"><span class="material-symbols-outlined">share</span></button>
             <div class="dropdown-menu" id="shareMenu">
@@ -374,16 +262,11 @@
     <section class="panel active" id="editorPanel">
         <div class="editor-container">
             <div id="editor-highlighting"></div>
-            <textarea id="editor" placeholder="# v5.8 語法測試
-這是 *斜體文字* (應為綠色)
-這是 **粗體文字** (應為紅色)
-這是 ***粗斜體*** (混合測試)
-
-緊貼測試：
-這裡有*斜體*內容。
-這裡有**粗體**內容。
-*緊貼開頭斜體
-**緊貼開頭粗體" spellcheck="false" wrap="off"></textarea>
+            <textarea id="editor" placeholder="# v6.0 智慧型清單測試
+- 這是項目一
+- 這是項目二 (在行末按 Enter 試試)
+1. 有序清單
+   - 縮排項目" spellcheck="false" wrap="off"></textarea>
         </div>
     </section>
     <section class="panel" id="previewPanel">
@@ -398,36 +281,81 @@
     const editorHighlighting = document.getElementById('editor-highlighting');
     const preview = document.getElementById('preview');
     
-    // v5.8 語法高亮優化：徹底分離粗體與斜體
+    // v6.0 語法高亮
     function highlightContent() {
         const text = editor.value;
         let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         
-        // 1. 區塊程式碼
         html = html.replace(/(```[\s\S]*?```)/g, '<span class="h-code">$1</span>');
-
-        // 2. 粗體 (優先處理，確保不被斜體誤吃)
-        html = html.replace(/(\*\*|__)(?=\S)(.+?)(?<=\S)\1/g, '<span class="h-bold">$1$2$1</span>');
-
-        // 3. 斜體 (使用負向斷言，確保不匹配粗體符號)
-        // 匹配單個 * 或 _，但前後不能也是 * 或 _
+        html = html.replace(/(\*\*)([^\s\*][^\*]*?[^\s\*]|[^\s\*])\1/g, '<span class="h-bold">$1$2$1</span>');
         html = html.replace(/(?<!\*)\*([^\s\*](?:.*?[^\s\*])?)\*(?!\*)/g, '<span class="h-italic">*$1*</span>');
-        html = html.replace(/(?<!_)_([^\s_](?:.*?[^\s_])?)_(?!_)/g, '<span class="h-italic">_$1_</span>');
+        
+        // v6.0 清單與編號辨識 (支援縮排)
+        html = html.replace(/^(\s*([-*+]|\d+\.)\s+)(.*)/gm, '<span class="h-list">$1</span>$3');
 
-        // 4. 其他語法
         html = html.replace(/`([^`]+)`/g, '<span class="h-code">`$1`</span>');
         html = html.replace(/^(#+)(.*)/gm, '<span class="h-heading">$1$2</span>');
-        html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<span class="h-link-text">[$1]</span><span class="h-link-url">($2)</span>');
+        html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<span class="h-link-text">[$1]</span>($2)');
         html = html.replace(/^(\s*>\s*)(.*)/gm, '<span class="h-quote">$1$2</span>');
-        html = html.replace(/^(\s*[-*+]\s+)(.*)/gm, '<span class="h-list">$1$2</span>');
         html = html.replace(/(\$\$[\s\S]*?\$\$)/g, '<span class="h-math">$1</span>');
 
         editorHighlighting.innerHTML = html + '\n';
     }
 
+    // v6.0 智慧換行邏輯
+    editor.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') {
+            const start = editor.selectionStart;
+            const end = editor.selectionEnd;
+            const text = editor.value;
+            
+            // 獲取當前行
+            const lastNewline = text.lastIndexOf('\n', start - 1);
+            const lineStart = lastNewline + 1;
+            const currentLine = text.substring(lineStart, start);
+            
+            // 匹配清單前綴 (縮排 + 符號)
+            // 支援: "- ", "* ", "1. ", "  - " 等
+            const listMatch = currentLine.match(/^(\s*)([-*+]|\d+\.)\s+/);
+            
+            if (listMatch) {
+                e.preventDefault();
+                const fullPrefix = listMatch[0];
+                const indent = listMatch[1];
+                const bullet = listMatch[2];
+                const contentAfterPrefix = currentLine.substring(fullPrefix.length).trim();
+                
+                // 情境 1: 如果當前條目是空的 -> 按下 Enter 縮減縮排或刪除
+                if (contentAfterPrefix === "") {
+                    // 刪除該行前綴
+                    const newText = text.substring(0, lineStart) + text.substring(start);
+                    editor.value = newText;
+                    editor.selectionStart = editor.selectionEnd = lineStart;
+                } 
+                // 情境 2: 正常條目換行 -> 延續前綴
+                else {
+                    let nextPrefix = fullPrefix;
+                    
+                    // 如果是有序清單，數字 +1
+                    if (/\d+\./.test(bullet)) {
+                        const num = parseInt(bullet);
+                        nextPrefix = fullPrefix.replace(/\d+\./, (num + 1) + ".");
+                    }
+                    
+                    const insertText = "\n" + nextPrefix;
+                    const newText = text.substring(0, start) + insertText + text.substring(end);
+                    editor.value = newText;
+                    editor.selectionStart = editor.selectionEnd = start + insertText.length;
+                }
+                
+                // 觸發輸入事件以更新預覽與高亮
+                editor.dispatchEvent(new Event('input'));
+            }
+        }
+    });
+
     editor.addEventListener('input', () => {
-        const raw = editor.value;
-        preview.innerHTML = DOMPurify.sanitize(marked.parse(raw));
+        preview.innerHTML = DOMPurify.sanitize(marked.parse(editor.value));
         highlightContent();
         updateHash();
     });
@@ -437,17 +365,16 @@
     });
 
     function updateHash() {
-        const rawValue = editor.value;
-        const compressed = LZString.compressToEncodedURIComponent(rawValue);
+        const compressed = LZString.compressToEncodedURIComponent(editor.value);
         if (compressed) history.replaceState(null, null, '#' + compressed);
         
         const fullLength = window.location.href.length;
         document.getElementById('sizeText').innerText = fullLength + ' chars';
         
         const dot = document.getElementById('sizeDot');
-        if (fullLength < 4000) {
+        if (fullLength <= 2000) {
             dot.style.backgroundColor = 'var(--success-color)';
-        } else if (fullLength < 8000) {
+        } else if (fullLength <= 8000) {
             dot.style.backgroundColor = 'var(--warning-color)';
         } else {
             dot.style.backgroundColor = 'var(--danger-color)';
