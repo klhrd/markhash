@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MarkHash v6.8</title>
+    <title>MarkHash v6.9</title>
     
     <!-- PWA Settings -->
     <link rel="manifest" href="./manifest.json">
@@ -53,7 +53,9 @@
         header {
             height: 50px; background: var(--bg-paper); border-bottom: 1px solid var(--border-color);
             display: flex; align-items: center; padding: 0 16px; justify-content: space-between;
-            z-index: 100;
+            z-index: 100; flex-shrink: 0;
+            padding-left: max(16px, env(safe-area-inset-left));
+            padding-right: max(16px, env(safe-area-inset-right));
         }
 
         .logo-group { display: flex; align-items: center; gap: 10px; }
@@ -77,21 +79,24 @@
         .url-stats span { font-family: 'Roboto Mono', monospace; font-size: 12px; color: var(--text-primary); }
         .dot { width: 10px; height: 10px; border-radius: 50%; background-color: var(--success-color); box-shadow: 0 0 4px rgba(0,0,0,0.2); }
 
+        .dropdown { position: relative; }
         .container { display: flex; flex: 1; overflow: hidden; }
         .panel { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; background: var(--bg-paper); position: relative; }
         #editorPanel { border-right: 1px solid var(--border-color); }
 
+        .editor-container { position: relative; flex: 1; overflow: hidden; }
         #editor {
             width: 100%; height: 100%; padding: 24px; font-family: 'Roboto Mono', monospace !important; 
             font-size: 15px; line-height: 1.6; border: none; outline: none; resize: none;
             background: transparent !important; color: transparent !important; caret-color: var(--text-primary);
             white-space: pre-wrap; word-wrap: break-word; z-index: 2; position: relative;
+            scrollbar-gutter: stable; overflow-y: auto; overflow-x: hidden;
         }
         #editor-highlighting {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 24px;
             font-family: 'Roboto Mono', monospace !important; font-size: 15px; line-height: 1.6;
             overflow-y: hidden; pointer-events: none; white-space: pre-wrap; word-wrap: break-word;
-            color: var(--text-primary); z-index: 1;
+            color: var(--text-primary); z-index: 1; scrollbar-gutter: stable;
         }
 
         .h-heading { color: #2563eb; font-weight: bold; }
@@ -120,7 +125,7 @@
             min-width: 180px; display: none; flex-direction: column; padding: 8px; z-index: 1000;
         }
         .dropdown-menu.show { display: flex; }
-        .dropdown-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: none; background: transparent; color: var(--text-primary); cursor: pointer; font-size: 14px; border-radius: 6px; width: 100%; }
+        .dropdown-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: none; background: transparent; color: var(--text-primary); cursor: pointer; font-size: 14px; border-radius: 6px; width: 100%; text-align: left; }
         .dropdown-item:hover { background-color: var(--hover-bg); }
 
         #toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); background: var(--text-primary); color: var(--bg-paper); padding: 12px 24px; border-radius: 12px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 2000; pointer-events: none; }
@@ -140,7 +145,7 @@
                 <path d="M 40 60 h 50 l -10 60 h 35 l 10 -60 h 40 l -10 60 h 35 l 10 -60 h 50 L 270 60 L 270 30 L 205 30 L 215 -30 L 270 -30 L 270 -60 L 270 -60 h -50 l 10 -60 h -35 l -10 60 h -40 l 10 -60 h -35 l -10 60 h -50 l -5 30 h 50 l -10 60 h 35 l 10 -60 h 40 l -10 60 h -40 h -35 h -50 l -5 30 Z M -320 320 q -33 0 -56.5 -23.5 T -400 240 v -480 q 0 -33 23.5 -56.5 T -320 -320 h 640 q 33 0 56.5 23.5 T 400 -240 v 480 q 0 33 -23.5 56.5 T 320 320 H -320 Z m 0 -80 h 640 v -480 H -320 v 480 Z m 0 0 v -480 v 480 Z m 60 -120 h 60 v -180 h 40 v 120 h 60 v -120 h 40 v 180 h 60 v -200 q 0 -17 -11.5 -28.5 T -40 -120 H -220 q -17 0 -28.5 11.5 T -260 -80 v 200 Z" />
             </svg>
         </div>
-        <div class="version-tag">v6.8</div>
+        <div class="version-tag">v6.9</div>
     </div>
 
     <div class="controls">
@@ -154,15 +159,27 @@
         <div class="dropdown">
             <button class="icon-btn" onclick="toggleMenu(event, 'fileMenu')"><span class="material-symbols-outlined">save</span></button>
             <div class="dropdown-menu" id="fileMenu">
-                <button class="dropdown-item" onclick="triggerUpload()">匯入</button>
-                <button class="dropdown-item" onclick="downloadFile()">下載</button>
+                <button class="dropdown-item" onclick="triggerUpload()">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">upload_file</span>
+                    <span>匯入</span>
+                </button>
+                <button class="dropdown-item" onclick="downloadFile()">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">save_alt</span>
+                    <span>下載</span>
+                </button>
             </div>
         </div>
         <div class="dropdown">
             <button class="icon-btn" onclick="toggleMenu(event, 'shareMenu')"><span class="material-symbols-outlined">share</span></button>
             <div class="dropdown-menu" id="shareMenu">
-                <button class="dropdown-item" onclick="copyOriginalUrl()">複製長連結</button>
-                <button class="dropdown-item" onclick="shortenUrl()">Is.gd 縮網址</button>
+                <button class="dropdown-item" onclick="copyOriginalUrl()">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">link</span>
+                    <span>複製長連結</span>
+                </button>
+                <button class="dropdown-item" onclick="shortenUrl()">
+                    <span class="material-symbols-outlined" style="font-size: 20px;">bolt</span>
+                    <span>Is.gd 縮網址</span>
+                </button>
             </div>
         </div>
     </div>
@@ -172,7 +189,7 @@
     <section class="panel active" id="editorPanel">
         <div class="editor-container">
             <div id="editor-highlighting"></div>
-            <textarea id="editor" spellcheck="false" wrap="off" placeholder="# v6.8 高性能渲染測試
+            <textarea id="editor" spellcheck="false" placeholder="# v6.9 高性能渲染測試
 | ***粗斜體*** | `***粗斜體***` | ***粗斜體*** |"></textarea>
         </div>
     </section>
@@ -190,7 +207,7 @@
     const sizeText = document.getElementById('sizeText');
     const sizeDot = document.getElementById('sizeDot');
     
-    // v6.8 Web Worker: 僅負責 Markdown 解析與 URL 壓縮
+    // v6.9 Web Worker: 僅負責 Markdown 解析與 URL 壓縮
     const workerScript = `
         importScripts('https://cdn.jsdelivr.net/npm/marked/marked.min.js', 
                       'https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js',
@@ -242,14 +259,14 @@
         html = html.replace(/```[\s\S]*?```/g, m => addP(`<span class="h-code">${m}</span>`));
         html = html.replace(/\$\$[\s\S]*?\$\$/g, m => addP(`<span class="h-math">${m}</span>`));
         html = html.replace(/`[^`\n]+`/g, m => addP(`<span class="h-code">${m}</span>`));
-        html = html.replace(/(?<![\$\\])\$([^\$\n]+?)\$(?!\$)/g, m => addP(`<span class="h-math">${m}</span>`));
+        // Use a compatible regex for math inline
+        html = html.replace(/\$([^\$\n]+?)\$/g, m => addP(`<span class="h-math">${m}</span>`));
 
-        // 樣式渲染：修正粗斜體與表格管道的衝突
-        html = html.replace(/(\*\*\*|___)([^\s][\s\S]*?[^\s])\1/g, '<span class="h-bold-italic">$1$2$1</span>');
-        html = html.replace(/(\*\*|__)([^\s][\s\S]*?[^\s])\1/g, '<span class="h-bold">$1$2$1</span>');
-        html = html.replace(/(?<!\*)\*([^\s\*](?:.*?[^\s\*])?)\*(?!\*)/g, '<span class="h-italic">*$1*</span>');
-        html = html.replace(/(?<!_)_([^\s_](?:.*?[^\s_])?)_(?!_)/g, '<span class="h-italic">_$1_</span>');
-        html = html.replace(/(~~)([^\s][\s\S]*?[^\s])\1/g, '<span class="h-strikethrough">$1$2$1</span>');
+        // Styling: Support 1 or more characters inside delimiters
+        html = html.replace(/(\*\*\*|___)(?=\S)([\s\S]*?\S)\1/g, '<span class="h-bold-italic">$1$2$1</span>');
+        html = html.replace(/(\*\*|__)(?=\S)([\s\S]*?\S)\1/g, '<span class="h-bold">$1$2$1</span>');
+        html = html.replace(/(\*|_)(?=\S)([\s\S]*?\S)\1/g, '<span class="h-italic">$1$2$1</span>');
+        html = html.replace(/(~~)(?=\S)([\s\S]*?\S)\1/g, '<span class="h-strikethrough">$1$2$1</span>');
         
         html = html.replace(/^(\s*([-*+]|\d+\.)\s+)(.*)/gm, '<span class="h-list">$1</span>$3');
         html = html.replace(/^(#+)(.*)/gm, '<span class="h-heading">$1$2</span>');
@@ -267,7 +284,7 @@
     const triggerW = debounce(() => worker.postMessage({ text: editor.value }), 150);
 
     editor.addEventListener('input', () => { highlightContent(); updateStats(editor.value.length); triggerW(); });
-    editor.addEventListener('scroll', () => { editorHighlighting.scrollTop = editor.scrollTop; editorHighlighting.scrollLeft = editor.scrollLeft; });
+    editor.addEventListener('scroll', () => { editorHighlighting.scrollTop = editor.scrollTop; });
 
     function toggleMenu(e, id) {
         e.stopPropagation();
@@ -285,12 +302,26 @@
     }
 
     function showToast(m) { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
-    function copyToClipboard(t) { navigator.clipboard.writeText(t).then(() => showToast("已複製")); }
+    
+    function copyToClipboard(t) { 
+        if (navigator.clipboard && navigator.clipboard.writeText) {
+            navigator.clipboard.writeText(t).then(() => showToast("已複製")).catch(() => fallbackCopy(t));
+        } else { fallbackCopy(t); }
+    }
+    
+    function fallbackCopy(t) {
+        const input = document.createElement('textarea'); input.value = t; document.body.appendChild(input); input.select();
+        try { document.execCommand('copy'); showToast("已複製"); } catch(e) { showToast("複製失敗"); }
+        document.body.removeChild(input);
+    }
+
     function copyOriginalUrl() { copyToClipboard(window.location.href); }
+    
     async function shortenUrl() {
         showToast("產出中...");
         try {
-            const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(`https://is.gd/create.php?format=json&url=${encodeURIComponent(window.location.href)}`)}`);
+            const apiUrl = `https://is.gd/create.php?format=json&url=${encodeURIComponent(window.location.href)}`;
+            const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`);
             const d = await r.json();
             const s = JSON.parse(d.contents).shorturl;
             if (s) copyToClipboard(s);
