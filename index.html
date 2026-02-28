@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MarkHash v5.5</title>
+    <title>MarkHash v5.6</title>
     
     <!-- PWA Settings -->
     <link rel="manifest" href="./manifest.json">
@@ -36,41 +36,40 @@
 
     <!-- 7. Google Material Symbols -->
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0" />
-    <!-- 8. 字體設定 (優先嘗試 Google Sans Code 效果) -->
+    <!-- 8. 字體設定 -->
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
     <style>
         /* 
            =========================================
-           顏色調整區 (Color Customization)
+           顏色調整區 (v5.6 Color Palette)
            =========================================
-           在此修改基礎顏色變數：
         */
         :root {
-            /* 淺色模式背景與文字 */
-            --bg-body: #e0e0e0;       /* 基礎底色 (原本為 #f3f4f6，現在加深) */
-            --bg-paper: #ffffff;      /* 編輯區/預覽區背景 */
-            --text-primary: #1f2937;  /* 主要文字顏色 */
-            --text-secondary: #6b7280;/* 次要文字顏色 */
-            --border-color: #d1d5db;  /* 邊框顏色 */
+            /* 淺色模式 */
+            --bg-body: #dadada;       /* 整體背景底色 */
+            --bg-paper: #ffffff;      /* 區塊背景 */
+            --text-primary: #111827;  /* 主要文字 */
+            --text-secondary: #4b5563;/* 次要文字 */
+            --border-color: #cbd5e1;  /* 邊框 */
+            --accent-color: #3b82f6;  /* 強調色 (藍) */
             --hover-bg: rgba(0, 0, 0, 0.05);
             
             --success-color: #10b981;
             --warning-color: #f59e0b;
             --danger-color: #ef4444;
-            --dropdown-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --dropdown-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
         }
 
-        /* 自動深色模式偵測與顏色設定 */
         @media (prefers-color-scheme: dark) {
             :root {
-                --bg-body: #1a1a1a;       /* 深色模式基礎底色 */
-                --bg-paper: #242424;      /* 深色模式編輯/預覽背景 */
-                --text-primary: #e5e5e5;  
-                --text-secondary: #a3a3a3;
-                --border-color: #333333;
+                --bg-body: #0f172a;       
+                --bg-paper: #1e293b;      
+                --text-primary: #f8fafc;  
+                --text-secondary: #94a3b8;
+                --border-color: #334155;
                 --hover-bg: rgba(255, 255, 255, 0.08);
-                --dropdown-shadow: 0 4px 12px rgba(0,0,0,0.4);
+                --dropdown-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3);
             }
         }
 
@@ -89,7 +88,6 @@
             overscroll-behavior: none;
         }
 
-        /* 頂部導航 */
         header {
             height: 50px;
             background: var(--bg-paper);
@@ -100,30 +98,26 @@
             justify-content: space-between;
             z-index: 100;
             flex-shrink: 0;
-            padding-left: max(16px, env(safe-area-inset-left));
-            padding-right: max(16px, env(safe-area-inset-right));
         }
 
         .logo {
-            font-weight: 600;
-            font-size: 1.1rem;
             display: flex;
             align-items: center;
-            gap: 6px;
+            justify-content: center;
             color: var(--text-primary);
             user-select: none;
         }
 
         .logo svg {
-            width: 24px;
-            height: 24px;
+            width: 32px;  /* 放大 Logo */
+            height: 32px;
             fill: currentColor;
         }
 
         .controls {
             display: flex;
             align-items: center;
-            gap: 8px;
+            gap: 12px;
         }
 
         button.icon-btn {
@@ -132,13 +126,12 @@
             color: var(--text-secondary);
             width: 36px;
             height: 36px;
-            border-radius: 6px;
+            border-radius: 8px;
             cursor: pointer;
             display: flex;
             align-items: center;
             justify-content: center;
             transition: all 0.2s ease;
-            padding: 0;
         }
 
         button.icon-btn:hover {
@@ -146,80 +139,40 @@
             color: var(--text-primary);
         }
 
-        .dropdown {
-            position: relative;
-            display: flex;
-            align-items: center;
-        }
-
-        .dropdown-menu {
-            position: absolute;
-            top: 100%;
-            right: 0;
-            margin-top: 8px;
-            background-color: var(--bg-paper);
-            border: 1px solid var(--border-color);
-            border-radius: 8px;
-            box-shadow: var(--dropdown-shadow);
-            min-width: 180px;
-            z-index: 1000;
-            display: none;
-            flex-direction: column;
-            padding: 6px;
-            transform-origin: top right;
-            animation: dropdownFade 0.2s ease-out;
-        }
-
-        @keyframes dropdownFade {
-            from { opacity: 0; transform: scale(0.95); }
-            to { opacity: 1; transform: scale(1); }
-        }
-
-        .dropdown-menu.show { display: flex; }
-
-        .dropdown-item {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            padding: 10px 12px;
-            border: none;
-            background: transparent;
-            color: var(--text-primary);
-            cursor: pointer;
-            text-align: left;
-            font-size: 14px;
-            border-radius: 6px;
-            width: 100%;
-            font-family: system-ui, -apple-system, sans-serif;
-            white-space: nowrap;
-        }
-
-        .dropdown-item:hover { background-color: var(--hover-bg); }
-
+        /* 狀態指示燈 (點擊顯示文字) */
         .url-stats {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 20px;
+            transition: background 0.2s;
+        }
+        
+        .url-stats:hover { background: var(--hover-bg); }
+
+        .url-stats span {
             font-family: 'Roboto Mono', monospace;
             font-size: 12px;
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 8px;
-            color: var(--text-secondary);
-            margin-right: 4px;
-            border-radius: 4px;
+            display: none; /* 預設隱藏 */
+            color: var(--text-primary);
         }
+        
+        .url-stats.show-text span { display: inline; }
 
         .dot {
-            width: 6px;
-            height: 6px;
+            width: 8px;
+            height: 8px;
             border-radius: 50%;
             background-color: var(--success-color);
+            box-shadow: 0 0 4px rgba(0,0,0,0.2);
         }
 
         .container {
             display: flex;
             flex: 1;
             overflow: hidden;
-            position: relative;
         }
 
         .panel {
@@ -229,7 +182,6 @@
             height: 100%;
             overflow: hidden;
             background: var(--bg-paper);
-            position: relative;
         }
 
         #editorPanel { border-right: 1px solid var(--border-color); }
@@ -237,14 +189,12 @@
         .editor-container {
             position: relative;
             flex: 1;
-            display: flex;
-            height: 100%;
-            overflow: hidden;
             background: var(--bg-paper);
         }
 
         #editor {
-            flex: 1;
+            width: 100%;
+            height: 100%;
             padding: 24px;
             font-family: 'Roboto Mono', monospace !important; 
             font-size: 15px;
@@ -253,18 +203,12 @@
             outline: none;
             resize: none;
             background: transparent !important;
-            color: transparent !important; /* 文字透明以顯示下方高亮 */
-            width: 100%;
-            overflow-y: auto;
-            -webkit-overflow-scrolling: touch;
-            padding-bottom: 80px; 
-            padding-bottom: calc(80px + env(safe-area-inset-bottom));
-            position: relative; 
+            color: transparent !important;
             caret-color: var(--text-primary);
             white-space: pre-wrap; 
             word-wrap: break-word; 
-            box-sizing: border-box; 
             z-index: 2;
+            position: relative;
         }
 
         #editor-highlighting {
@@ -277,43 +221,36 @@
             font-family: 'Roboto Mono', monospace !important;
             font-size: 15px;
             line-height: 1.6;
-            overflow-y: auto;
+            overflow-y: hidden;
             pointer-events: none;
             white-space: pre-wrap;
             word-wrap: break-word;
-            box-sizing: border-box;
             color: var(--text-primary);
-            padding-bottom: 80px; 
-            padding-bottom: calc(80px + env(safe-area-inset-bottom));
             z-index: 1;
         }
 
-        /* 語法高亮樣式區 (v5.5 統一配色與修正) */
-        .h-heading { color: #007acc; font-weight: bold; }
-        .h-bold { color: #2563eb; font-weight: bold; }   /* v5.5 統一一色 (藍色系) */
-        .h-italic { color: #2563eb; font-style: italic; } /* v5.5 統一一色 (藍色系) */
-        .h-code { color: #eab308; background-color: rgba(100,100,100,0.1); padding: 0 2px; border-radius: 3px; }
-        .h-list { color: #8b5cf6; }
-        .h-quote { color: #6b7280; font-style: italic; }
-        .h-link-text { color: #06b6d4; text-decoration: underline; }
-        .h-link-url { color: #06b6d4; opacity: 0.7; }
-        .h-hr { color: #9ca3af; }
-        .h-fenced-code-block { color: #eab308; background-color: rgba(100,100,100,0.1); display: block; padding: 10px; margin: 10px 0; border-radius: 5px;}
-        .h-math { color: #d946ef; }
+        /* 語法高亮樣式 (v5.6 顏色分離) */
+        .h-heading { color: #2563eb; font-weight: bold; }
+        .h-bold { color: #dc2626; font-weight: bold; }   /* 粗體: 紅色 */
+        .h-italic { color: #059669; font-style: italic; } /* 斜體: 綠色 */
+        .h-code { color: #d97706; background-color: rgba(217, 119, 6, 0.1); padding: 0 2px; border-radius: 3px; }
+        .h-list { color: #7c3aed; }
+        .h-quote { color: #64748b; font-style: italic; border-left: 2px solid #cbd5e1; padding-left: 4px; }
+        .h-link-text { color: #0891b2; text-decoration: underline; }
+        .h-link-url { color: #0891b2; opacity: 0.6; }
+        .h-hr { color: #94a3b8; }
+        .h-math { color: #c026d3; }
 
         @media (prefers-color-scheme: dark) {
-            #editor-highlighting { color: #d1d5db; }
-            .h-bold, .h-italic { color: #60a5fa; } /* 深色模式下的藍色 */
+            .h-bold { color: #f87171; }
+            .h-italic { color: #34d399; }
+            .h-heading { color: #60a5fa; }
         }
 
         #preview-container {
             flex: 1;
             overflow-y: auto;
-            background: var(--bg-paper);
-            padding: 24px 40px;
-            -webkit-overflow-scrolling: touch;
-            padding-bottom: 80px;
-            padding-bottom: calc(80px + env(safe-area-inset-bottom));
+            padding: 32px 48px;
         }
 
         .markdown-body {
@@ -322,45 +259,43 @@
             font-family: system-ui, -apple-system, sans-serif !important;
             line-height: 1.8;
         }
-        
-        @media (prefers-color-scheme: dark) {
-            .markdown-body { color-scheme: dark; }
-            .markdown-body a { color: #58a6ff; }
-            .markdown-body blockquote { border-left-color: #333; color: #a3a3a3; }
-            .markdown-body code { background: rgba(255,255,255,0.1); }
-            .markdown-body pre { background: #161616; }
-            .markdown-body table tr { background-color: #242424; border-top-color: #333; }
-        }
 
-        .mobile-switch-btn { display: none; }
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            background-color: var(--bg-paper);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: var(--dropdown-shadow);
+            min-width: 180px;
+            display: none;
+            flex-direction: column;
+            padding: 8px;
+            z-index: 1000;
+        }
+        .dropdown-menu.show { display: flex; }
 
         #toast {
             position: fixed;
-            bottom: 40px;
+            bottom: 32px;
             left: 50%;
-            transform: translateX(-50%) translateY(20px);
+            transform: translateX(-50%);
             background: var(--text-primary);
             color: var(--bg-paper);
-            padding: 10px 20px;
-            border-radius: 50px;
-            font-size: 13px;
-            font-weight: 500;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
             opacity: 0;
-            pointer-events: none;
-            transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: opacity 0.3s;
+            z-index: 2000;
         }
-        
-        #toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+        #toast.show { opacity: 1; }
 
         @media (max-width: 768px) {
-            header { padding: 0 12px; height: 48px; }
-            .container { display: block; }
-            .panel { display: none; width: 100%; height: 100%; }
+            #preview-container { padding: 24px; }
+            .panel { display: none; }
             .panel.active { display: flex; }
-            #preview-container { padding: 20px; }
-            .mobile-switch-btn { display: flex; }
         }
     </style>
 </head>
@@ -370,264 +305,164 @@
 
 <header>
     <div class="logo">
-        <svg viewBox="80 -850 850 850">
+        <svg viewBox="100 -850 800 850">
             <path d="M+520-420 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h+35 l+10-60 h+50 L+750-420 L+750-450 L+685-450 L+695-510 L+750-510 L+750-540 L+750-540 h-50 l+10-60 h-35 l-10+60 h-40 l+10-60 h-35 l-10+60 h-50 l-5+30 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h-40 h-35 h-50 l-5+30 Z M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm0 0v-480 480Zm60-120h60v-180h40v120h60v-120h40v180h60v-200q0-17-11.5-28.5T440-600H260q-17 0-28.5 11.5T220-560v200Z" />
         </svg>
-        <span>MarkHash v5.5</span>
     </div>
 
     <div class="controls">
-        <div class="url-stats" id="urlStats" title="URL 字元數 (Chars)">
+        <div class="url-stats" id="urlStats" onclick="this.classList.toggle('show-text')">
             <div class="dot" id="sizeDot"></div>
             <span id="sizeText">0 chars</span>
         </div>
 
-        <button class="icon-btn mobile-switch-btn" id="toggleViewBtn" onclick="toggleMobileView()" title="切換檢視">
+        <button class="icon-btn" id="toggleViewBtn" onclick="toggleMobileView()">
             <span class="material-symbols-outlined" id="toggleIcon">visibility</span>
         </button>
 
-        <div class="dropdown" id="fileDropdown">
-            <button class="icon-btn" onclick="toggleFileMenu(event)" title="檔案操作">
-                <span class="material-symbols-outlined">save</span>
-            </button>
+        <div class="dropdown">
+            <button class="icon-btn" onclick="toggleMenu('fileMenu')"><span class="material-symbols-outlined">save</span></button>
             <div class="dropdown-menu" id="fileMenu">
-                <button class="dropdown-item" onclick="triggerUpload()">
-                    <span class="material-symbols-outlined">upload_file</span>
-                    <span>Import</span>
-                </button>
-                <button class="dropdown-item" onclick="downloadFile()">
-                    <span class="material-symbols-outlined">save_alt</span>
-                    <span>Export</span>
-                </button>
+                <button class="dropdown-item" onclick="triggerUpload()">匯入</button>
+                <button class="dropdown-item" onclick="downloadFile()">下載</button>
             </div>
         </div>
 
-        <div class="dropdown" id="shareDropdown">
-            <button class="icon-btn" onclick="toggleShareMenu(event)" title="分享連結">
-                <span class="material-symbols-outlined">share</span>
-            </button>
+        <div class="dropdown">
+            <button class="icon-btn" onclick="toggleMenu('shareMenu')"><span class="material-symbols-outlined">share</span></button>
             <div class="dropdown-menu" id="shareMenu">
-                <button class="dropdown-item" onclick="copyOriginalUrl()">
-                    <span class="material-symbols-outlined">link</span>
-                    <span>原始長連結</span>
-                </button>
-                <button class="dropdown-item" onclick="shortenUrl('isgd')">
-                    <span class="material-symbols-outlined">bolt</span>
-                    <span>Is.gd 縮網址</span>
-                </button>
-                <button class="dropdown-item" onclick="shortenUrl('tinyurl')">
-                    <span class="material-symbols-outlined">compress</span>
-                    <span>TinyURL 縮網址</span>
-                </button>
+                <button class="dropdown-item" onclick="copyOriginalUrl()">複製長連結</button>
+                <button class="dropdown-item" onclick="shortenUrl('isgd')">Is.gd 縮網址</button>
             </div>
         </div>
     </div>
 </header>
 
-<div class="container" id="mainContainer">
+<div class="container">
     <section class="panel active" id="editorPanel">
         <div class="editor-container">
             <div id="editor-highlighting"></div>
-            <textarea id="editor" placeholder="# 開始輸入...&#10;&#10;更新 v5.5：&#10;修正粗斜體衝突、統一語法顏色、加深底色並提供顏色調整註解。" spellcheck="false" wrap="off"></textarea>
+            <textarea id="editor" placeholder="# v5.6 更新內容..." spellcheck="false" wrap="off"></textarea>
         </div>
     </section>
-
     <section class="panel" id="previewPanel">
-        <div id="preview-container">
-            <div id="preview" class="markdown-body"></div>
-        </div>
+        <div id="preview-container"><div id="preview" class="markdown-body"></div></div>
     </section>
 </div>
 
-<div id="toast">
-    <span style="display: flex; align-items: center; gap: 8px;">
-        <span class="material-symbols-outlined" style="font-size: 16px;">check</span>
-        <span id="toastMsg">網址已複製</span>
-    </span>
-</div>
+<div id="toast"><span id="toastMsg"></span></div>
 
 <script>
     const editor = document.getElementById('editor');
     const editorHighlighting = document.getElementById('editor-highlighting');
     const preview = document.getElementById('preview');
-    const editorPanel = document.getElementById('editorPanel');
-    const previewPanel = document.getElementById('previewPanel');
-    const toggleIcon = document.getElementById('toggleIcon');
-    const sizeText = document.getElementById('sizeText');
-    const sizeDot = document.getElementById('sizeDot');
     
-    const fileInput = document.getElementById('fileInput');
-    const fileMenu = document.getElementById('fileMenu');
-    const shareMenu = document.getElementById('shareMenu');
-    const toastMsg = document.getElementById('toastMsg');
-    
-    let isMobilePreviewMode = false;
-
-    if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-            navigator.serviceWorker.register('./sw.js');
-        });
-    }
-
-    marked.use(window.markedKatex({ throwOnError: false }));
-    marked.setOptions({
-        highlight: function(code, lang) {
-            const language = hljs.getLanguage(lang) ? lang : 'plaintext';
-            return hljs.highlight(code, { language }).value;
-        },
-        breaks: true,
-        gfm: true
-    });
-
-    // 語法高亮核心邏輯 (v5.5 修正正則衝突)
-    function highlightEditorContent() {
+    // 語法高亮 (v5.6 修正粗斜體衝突)
+    function highlightContent() {
         const text = editor.value;
         let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
-        // 1. 區塊程式碼
-        html = html.replace(/(```[\s\S]*?```)/g, '<span class="h-fenced-code-block">$1</span>');
         
-        // 2. 粗體 (需優先於斜體處理)
-        html = html.replace(/(\*\*|__)(?=\S)(.+?)(?<=\S)\1/g, '<span class="h-bold">$1$2$1</span>');
-        
-        // 3. 斜體 (排除已處理的粗體與重複星號)
-        html = html.replace(/(\*|_)(?=\S)([^\*_]+?)(?<=\S)\1/g, '<span class="h-italic">$1$2$1</span>');
+        // 優先處理粗體，再處理斜體，確保不衝突
+        html = html.replace(/(\*\*)(?=\S)(.+?)(?<!\s)(\*\*)/g, '<span class="h-bold">$1$2$3</span>');
+        html = html.replace(/(__)(?=\S)(.+?)(?<!\s)(__)/g, '<span class="h-bold">$1$2$3</span>');
+        html = html.replace(/(\*)(?=\S)([^\*]+?)(?<!\s)(\*)/g, '<span class="h-italic">$1$2$3</span>');
+        html = html.replace(/(_)(?=\S)([^_]+?)(?<!\s)(_)/g, '<span class="h-italic">$1$2$3</span>');
 
-        // 4. 其他語法
         html = html.replace(/`([^`]+)`/g, '<span class="h-code">`$1`</span>');
         html = html.replace(/^(#+)(.*)/gm, '<span class="h-heading">$1$2</span>');
         html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<span class="h-link-text">[$1]</span><span class="h-link-url">($2)</span>');
         html = html.replace(/^(\s*>\s*)(.*)/gm, '<span class="h-quote">$1$2</span>');
         html = html.replace(/^(\s*[-*+]\s+)(.*)/gm, '<span class="h-list">$1$2</span>');
         html = html.replace(/(\$\$[\s\S]*?\$\$)/g, '<span class="h-math">$1</span>');
-        html = html.replace(/^( {0,3}([-\*_]){3,}[ \t]*(\n|$))/gm, '<span class="h-hr">$1</span>');
 
         editorHighlighting.innerHTML = html + '\n';
     }
+
+    editor.addEventListener('input', () => {
+        const raw = editor.value;
+        preview.innerHTML = DOMPurify.sanitize(marked.parse(raw));
+        highlightContent();
+        updateHash();
+    });
 
     editor.addEventListener('scroll', () => {
         editorHighlighting.scrollTop = editor.scrollTop;
     });
 
-    const debouncedUpdate = debounce(() => {
-        const raw = editor.value;
-        preview.innerHTML = DOMPurify.sanitize(marked.parse(raw));
-        updateUrlHash();
-        highlightEditorContent();
-    }, 150);
-
-    editor.addEventListener('input', debouncedUpdate);
-
-    function debounce(func, wait) {
-        let timeout;
-        return function(...args) {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => func(...args), wait);
-        };
+    function updateHash() {
+        const compressed = LZString.compressToEncodedURIComponent(editor.value);
+        if (compressed) history.replaceState(null, null, '#' + compressed);
+        document.getElementById('sizeText').innerText = (window.location.href.length) + ' chars';
     }
 
-    function updateUrlHash() {
-        const raw = editor.value;
-        if (!raw) {
-            try { history.replaceState(null, null, ' '); } catch (e) {}
-            updateStats(window.location.href.length);
-            return;
-        }
-        const compressed = LZString.compressToEncodedURIComponent(raw);
-        try { history.replaceState(null, null, '#' + compressed); } catch (e) {}
-        updateStats(window.location.href.split('#')[0].length + 1 + compressed.length);
-    }
-
-    function loadFromHash() {
-        const hash = window.location.hash.substring(1); 
+    function loadHash() {
+        const hash = window.location.hash.substring(1);
         if (hash) {
-            const decompressed = LZString.decompressFromEncodedURIComponent(hash);
-            if (decompressed) {
-                editor.value = decompressed;
-                return true;
-            }
+            editor.value = LZString.decompressFromEncodedURIComponent(hash) || "";
+            preview.innerHTML = DOMPurify.sanitize(marked.parse(editor.value));
+            highlightContent();
         }
-        return false;
     }
 
-    function updateStats(byteLength) {
-        sizeText.innerText = byteLength + ' chars';
-        sizeDot.style.backgroundColor = byteLength < 2000 ? 'var(--success-color)' : (byteLength < 8000 ? 'var(--warning-color)' : 'var(--danger-color)');
+    function toggleMenu(id) {
+        document.querySelectorAll('.dropdown-menu').forEach(m => {
+            if (m.id !== id) m.classList.remove('show');
+        });
+        document.getElementById(id).classList.toggle('show');
     }
 
-    function toggleFileMenu(e) { e.stopPropagation(); shareMenu.classList.remove('show'); fileMenu.classList.toggle('show'); }
-    function toggleShareMenu(e) { e.stopPropagation(); fileMenu.classList.remove('show'); shareMenu.classList.toggle('show'); }
-    document.addEventListener('click', () => { fileMenu.classList.remove('show'); shareMenu.classList.remove('show'); });
-
-    function triggerUpload() { fileInput.click(); }
-    fileInput.addEventListener('change', (e) => {
-        const file = e.target.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            editor.value = e.target.result;
-            debouncedUpdate();
-            showToast("檔案已載入");
-        };
-        reader.readAsText(file);
+    document.addEventListener('click', (e) => {
+        if (!e.target.closest('.dropdown')) {
+            document.querySelectorAll('.dropdown-menu').forEach(m => m.classList.remove('show'));
+        }
     });
 
-    function downloadFile() {
-        const blob = new Blob([editor.value], { type: 'text/markdown' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = 'document.md';
-        a.click();
-        showToast("已下載檔案");
-    }
-
-    function copyOriginalUrl() { copyToClipboard(window.location.href); }
-    async function shortenUrl(service) {
-        const longUrl = window.location.href;
-        if (!longUrl.startsWith('http')) { showToast("⚠️ 非公開網址"); return; }
-        showToast("⏳ 縮網址中...");
-        const apiUrl = service === 'isgd' ? `https://is.gd/create.php?format=json&url=${encodeURIComponent(longUrl)}` : `https://tinyurl.com/api-create.php?url=${encodeURIComponent(longUrl)}`;
-        try {
-            const resp = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`);
-            const data = await resp.json();
-            const contents = data.contents;
-            let shortUrl = service === 'isgd' ? JSON.parse(contents).shorturl : contents;
-            if (shortUrl) { copyToClipboard(shortUrl); showToast("✅ 已複製短網址"); }
-        } catch (e) { showToast("❌ 縮網址失敗"); }
-    }
-
-    function copyToClipboard(text) {
-        if (navigator.clipboard) {
-            navigator.clipboard.writeText(text).then(() => showToast("已複製到剪貼簿"));
-        }
+    function toggleMobileView() {
+        document.getElementById('editorPanel').classList.toggle('active');
+        document.getElementById('previewPanel').classList.toggle('active');
+        document.getElementById('toggleIcon').innerText = document.getElementById('previewPanel').classList.contains('active') ? 'edit' : 'visibility';
     }
 
     function showToast(msg) {
-        toastMsg.innerText = msg;
-        const toast = document.getElementById('toast');
-        toast.classList.add('show');
-        setTimeout(() => toast.classList.remove('show'), 3000);
+        const t = document.getElementById('toast');
+        document.getElementById('toastMsg').innerText = msg;
+        t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2500);
     }
 
-    function toggleMobileView() {
-        isMobilePreviewMode = !isMobilePreviewMode;
-        applyMobileView();
+    function copyToClipboard(text) {
+        navigator.clipboard.writeText(text).then(() => showToast("已複製到剪貼簿"));
     }
 
-    function applyMobileView() {
-        if (window.innerWidth > 768) {
-            editorPanel.style.display = 'flex';
-            previewPanel.style.display = 'flex';
-            return;
-        }
-        editorPanel.style.display = isMobilePreviewMode ? 'none' : 'flex';
-        previewPanel.style.display = isMobilePreviewMode ? 'flex' : 'none';
-        toggleIcon.innerText = isMobilePreviewMode ? 'edit' : 'visibility';
+    async function shortenUrl(s) {
+        showToast("產出中...");
+        const url = `https://is.gd/create.php?format=json&url=${encodeURIComponent(window.location.href)}`;
+        try {
+            const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`);
+            const d = await r.json();
+            const sUrl = JSON.parse(d.contents).shorturl;
+            if (sUrl) copyToClipboard(sUrl);
+        } catch (e) { showToast("失敗"); }
     }
 
-    window.addEventListener('resize', applyMobileView);
-    if (loadFromHash()) debouncedUpdate(); else highlightEditorContent();
-    applyMobileView();
+    function triggerUpload() { document.getElementById('fileInput').click(); }
+    document.getElementById('fileInput').onchange = (e) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+            editor.value = ev.target.result;
+            editor.dispatchEvent(new Event('input'));
+        };
+        reader.readAsText(e.target.files[0]);
+    };
+
+    function downloadFile() {
+        const a = document.createElement('a');
+        a.href = URL.createObjectURL(new Blob([editor.value], {type: 'text/markdown'}));
+        a.download = 'markhash.md';
+        a.click();
+    }
+
+    loadHash();
 </script>
 
 </body>
