@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>MarkHash v5.6</title>
+    <title>MarkHash v5.7</title>
     
     <!-- PWA Settings -->
     <link rel="manifest" href="./manifest.json">
@@ -40,19 +40,14 @@
     <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;500;700&display=swap" rel="stylesheet">
 
     <style>
-        /* 
-           =========================================
-           顏色調整區 (v5.6 Color Palette)
-           =========================================
-        */
         :root {
             /* 淺色模式 */
-            --bg-body: #dadada;       /* 整體背景底色 */
-            --bg-paper: #ffffff;      /* 區塊背景 */
-            --text-primary: #111827;  /* 主要文字 */
-            --text-secondary: #4b5563;/* 次要文字 */
-            --border-color: #cbd5e1;  /* 邊框 */
-            --accent-color: #3b82f6;  /* 強調色 (藍) */
+            --bg-body: #dadada;       
+            --bg-paper: #ffffff;      
+            --text-primary: #111827;  
+            --text-secondary: #4b5563;
+            --border-color: #cbd5e1;  
+            --accent-color: #3b82f6;  
             --hover-bg: rgba(0, 0, 0, 0.05);
             
             --success-color: #10b981;
@@ -100,6 +95,12 @@
             flex-shrink: 0;
         }
 
+        .logo-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
         .logo {
             display: flex;
             align-items: center;
@@ -109,9 +110,17 @@
         }
 
         .logo svg {
-            width: 32px;  /* 放大 Logo */
+            width: 32px;
             height: 32px;
             fill: currentColor;
+        }
+
+        .version-tag {
+            font-family: 'Roboto Mono', monospace;
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            padding-top: 2px;
         }
 
         .controls {
@@ -139,7 +148,7 @@
             color: var(--text-primary);
         }
 
-        /* 狀態指示燈 (點擊顯示文字) */
+        /* 狀態指示燈 */
         .url-stats {
             display: flex;
             align-items: center;
@@ -155,7 +164,7 @@
         .url-stats span {
             font-family: 'Roboto Mono', monospace;
             font-size: 12px;
-            display: none; /* 預設隱藏 */
+            display: none; 
             color: var(--text-primary);
         }
         
@@ -167,6 +176,7 @@
             border-radius: 50%;
             background-color: var(--success-color);
             box-shadow: 0 0 4px rgba(0,0,0,0.2);
+            transition: background-color 0.3s;
         }
 
         .container {
@@ -229,10 +239,10 @@
             z-index: 1;
         }
 
-        /* 語法高亮樣式 (v5.6 顏色分離) */
+        /* 語法高亮樣式 (v5.7) */
         .h-heading { color: #2563eb; font-weight: bold; }
-        .h-bold { color: #dc2626; font-weight: bold; }   /* 粗體: 紅色 */
-        .h-italic { color: #059669; font-style: italic; } /* 斜體: 綠色 */
+        .h-bold { color: #dc2626; font-weight: bold; }   
+        .h-italic { color: #059669; font-style: italic; } 
         .h-code { color: #d97706; background-color: rgba(217, 119, 6, 0.1); padding: 0 2px; border-radius: 3px; }
         .h-list { color: #7c3aed; }
         .h-quote { color: #64748b; font-style: italic; border-left: 2px solid #cbd5e1; padding-left: 4px; }
@@ -276,6 +286,22 @@
         }
         .dropdown-menu.show { display: flex; }
 
+        .dropdown-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 10px 12px;
+            border: none;
+            background: transparent;
+            color: var(--text-primary);
+            cursor: pointer;
+            text-align: left;
+            font-size: 14px;
+            border-radius: 6px;
+            width: 100%;
+        }
+        .dropdown-item:hover { background-color: var(--hover-bg); }
+
         #toast {
             position: fixed;
             bottom: 32px;
@@ -304,10 +330,13 @@
 <input type="file" id="fileInput" style="display: none" accept=".md,.txt,.markdown">
 
 <header>
-    <div class="logo">
-        <svg viewBox="100 -850 800 850">
-            <path d="M+520-420 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h+35 l+10-60 h+50 L+750-420 L+750-450 L+685-450 L+695-510 L+750-510 L+750-540 L+750-540 h-50 l+10-60 h-35 l-10+60 h-40 l+10-60 h-35 l-10+60 h-50 l-5+30 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h-40 h-35 h-50 l-5+30 Z M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm0 0v-480 480Zm60-120h60v-180h40v120h60v-120h40v180h60v-200q0-17-11.5-28.5T440-600H260q-17 0-28.5 11.5T220-560v200Z" />
-        </svg>
+    <div class="logo-group">
+        <div class="logo">
+            <svg viewBox="100 -850 800 850">
+                <path d="M+520-420 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h+35 l+10-60 h+50 L+750-420 L+750-450 L+685-450 L+695-510 L+750-510 L+750-540 L+750-540 h-50 l+10-60 h-35 l-10+60 h-40 l+10-60 h-35 l-10+60 h-50 l-5+30 h+50 l-10+60 h+35 l+10-60 h+40 l-10+60 h-40 h-35 h-50 l-5+30 Z M160-160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800h640q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160Zm0-80h640v-480H160v480Zm0 0v-480 480Zm60-120h60v-180h40v120h60v-120h40v180h60v-200q0-17-11.5-28.5T440-600H260q-17 0-28.5 11.5T220-560v200Z" />
+            </svg>
+        </div>
+        <div class="version-tag">v5.7</div>
     </div>
 
     <div class="controls">
@@ -342,7 +371,12 @@
     <section class="panel active" id="editorPanel">
         <div class="editor-container">
             <div id="editor-highlighting"></div>
-            <textarea id="editor" placeholder="# v5.6 更新內容..." spellcheck="false" wrap="off"></textarea>
+            <textarea id="editor" placeholder="# v5.7 測試
+這是*斜體*內容。
+這是**粗體**內容。
+*緊貼斜體*
+**緊貼粗體**
+*混合**粗體**斜體*" spellcheck="false" wrap="off"></textarea>
         </div>
     </section>
     <section class="panel" id="previewPanel">
@@ -357,17 +391,24 @@
     const editorHighlighting = document.getElementById('editor-highlighting');
     const preview = document.getElementById('preview');
     
-    // 語法高亮 (v5.6 修正粗斜體衝突)
+    // 語法高亮 (v5.7 優化正則，支援無空格渲染)
     function highlightContent() {
         const text = editor.value;
         let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
         
-        // 優先處理粗體，再處理斜體，確保不衝突
-        html = html.replace(/(\*\*)(?=\S)(.+?)(?<!\s)(\*\*)/g, '<span class="h-bold">$1$2$3</span>');
-        html = html.replace(/(__)(?=\S)(.+?)(?<!\s)(__)/g, '<span class="h-bold">$1$2$3</span>');
-        html = html.replace(/(\*)(?=\S)([^\*]+?)(?<!\s)(\*)/g, '<span class="h-italic">$1$2$3</span>');
-        html = html.replace(/(_)(?=\S)([^_]+?)(?<!\s)(_)/g, '<span class="h-italic">$1$2$3</span>');
+        // 1. 區塊程式碼
+        html = html.replace(/(```[\s\S]*?```)/g, '<span class="h-code">$1</span>');
 
+        // 2. 粗體 (修正：支援緊貼文字，並優先於斜體處理)
+        // 使用 [^\s\*] 確保不匹配空格開頭，並確保前後匹配對稱
+        html = html.replace(/(\*\*)([^\s\*][^\*]*?[^\s\*]|[^\s\*])\1/g, '<span class="h-bold">$1$2$1</span>');
+        html = html.replace(/(__)([^\s_][^_]*?[^\s_]|[^\s_])\1/g, '<span class="h-bold">$1$2$1</span>');
+
+        // 3. 斜體 (修正：支援緊貼文字)
+        html = html.replace(/(\*)([^\s\*][^\*]*?[^\s\*]|[^\s\*])\1/g, '<span class="h-italic">$1$2$1</span>');
+        html = html.replace(/(_)([^\s_][^_]*?[^\s_]|[^\s_])\1/g, '<span class="h-italic">$1$2$1</span>');
+
+        // 4. 其他語法
         html = html.replace(/`([^`]+)`/g, '<span class="h-code">`$1`</span>');
         html = html.replace(/^(#+)(.*)/gm, '<span class="h-heading">$1$2</span>');
         html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<span class="h-link-text">[$1]</span><span class="h-link-url">($2)</span>');
@@ -390,17 +431,34 @@
     });
 
     function updateHash() {
-        const compressed = LZString.compressToEncodedURIComponent(editor.value);
+        const rawValue = editor.value;
+        const compressed = LZString.compressToEncodedURIComponent(rawValue);
         if (compressed) history.replaceState(null, null, '#' + compressed);
-        document.getElementById('sizeText').innerText = (window.location.href.length) + ' chars';
+        
+        const fullLength = window.location.href.length;
+        document.getElementById('sizeText').innerText = fullLength + ' chars';
+        
+        // v5.7 指示燈邏輯優化：寬鬆的綠色範圍
+        const dot = document.getElementById('sizeDot');
+        if (fullLength < 4000) {
+            dot.style.backgroundColor = 'var(--success-color)';
+        } else if (fullLength < 8000) {
+            dot.style.backgroundColor = 'var(--warning-color)';
+        } else {
+            dot.style.backgroundColor = 'var(--danger-color)';
+        }
     }
 
     function loadHash() {
         const hash = window.location.hash.substring(1);
         if (hash) {
-            editor.value = LZString.decompressFromEncodedURIComponent(hash) || "";
-            preview.innerHTML = DOMPurify.sanitize(marked.parse(editor.value));
-            highlightContent();
+            const decompressed = LZString.decompressFromEncodedURIComponent(hash);
+            if (decompressed) {
+                editor.value = decompressed;
+                preview.innerHTML = DOMPurify.sanitize(marked.parse(editor.value));
+                highlightContent();
+                updateHash();
+            }
         }
     }
 
@@ -463,6 +521,7 @@
     }
 
     loadHash();
+    if (!editor.value) updateHash();
 </script>
 
 </body>
