@@ -1,7 +1,9 @@
-const CACHE_NAME = 'markhash-v6.12';
+const CACHE_NAME = 'markhash-v6.13';
 const ASSETS = [
   './',
   './index.html',
+  './style.css',
+  './file.js',
   './manifest.json',
   'https://cdn.jsdelivr.net/npm/marked/marked.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.0.6/purify.min.js',
