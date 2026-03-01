@@ -22,4 +22,3 @@
 - [Marked.js](https://marked.js.org/) (Markdown 解析)
 - [LZ-String](https://pieroxy.net/lua/lz-string/) (資料壓縮)
 - [KaTeX](https://katex.org/) (數學公式)
-
