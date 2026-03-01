@@ -1,0 +1,13 @@
+# 系統產生的暫存檔
+.DS_Store
+Thumbs.db
+
+# 編輯器相關設定
+.vscode/
+.idea/
+
+# 測試用或備份檔案
+orig.html
+
+# 有私密的 API Key 或環境變數
+.env
