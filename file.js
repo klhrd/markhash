@@ -1,11 +1,4 @@
-const editor = document.getElementById('editor');
-const editorHighlighting = document.getElementById('editor-highlighting');
-const preview = document.getElementById('preview');
-const sizeText = document.getElementById('sizeText');
-const sizeDot = document.getElementById('sizeDot');
-const urlStats = document.getElementById('urlStats');
-
-// v6.13 Web Worker
+// v6.14 Web Worker
 const workerScript = `
     importScripts('https://cdn.jsdelivr.net/npm/marked/marked.min.js', 
                   'https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js',
@@ -39,7 +32,7 @@ function updateStats(len) {
 
 function toggleStats(e) { e.stopPropagation(); urlStats.classList.toggle('active'); }
 
-// v6.13 編輯器增強：智慧清單 Enter 退回邏輯
+// v6.14 編輯器增強：智慧清單 Enter 退回邏輯
 editor.addEventListener('keydown', (e) => {
     const start = editor.selectionStart;
     const end = editor.selectionEnd;
@@ -183,4 +176,11 @@ window.onload = () => {
         const d = LZString.decompressFromEncodedURIComponent(h);
         if (d) { editor.value = d; highlightContent(); updateStats(d.length); triggerW(); }
     } else { highlightContent(); triggerW(); }
+
+    // v6.14 行動版預設檢視模式
+    if (window.innerWidth <= 768) {
+        document.getElementById('editorPanel').classList.remove('active');
+        document.getElementById('previewPanel').classList.add('active');
+        document.getElementById('toggleIcon').innerText = 'edit';
+    }
 };

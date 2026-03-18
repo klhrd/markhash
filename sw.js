@@ -1,4 +1,4 @@
-const CACHE_NAME = 'markhash-v6.13';
+const CACHE_NAME = 'markhash-v6.14';
 const ASSETS = [
   './',
   './index.html',
