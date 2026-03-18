@@ -1,3 +1,10 @@
+const editor = document.getElementById('editor');
+const editorHighlighting = document.getElementById('editor-highlighting');
+const preview = document.getElementById('preview');
+const sizeText = document.getElementById('sizeText');
+const sizeDot = document.getElementById('sizeDot');
+const urlStats = document.getElementById('urlStats');
+
 // v6.14 Web Worker
 const workerScript = `
     importScripts('https://cdn.jsdelivr.net/npm/marked/marked.min.js', 
@@ -54,31 +61,24 @@ editor.addEventListener('keydown', (e) => {
             const indent = match[1];
             const marker = match[2];
 
-            // 1. 如果當前行只有標記（空的項目）
             if (marker && currentLine.trim() === marker.trim()) {
                 e.preventDefault();
                 let nextContent = "";
-                
                 if (indent.length > 0) {
-                    // 有縮排的子項目 (如 "  4. ") -> 升級為父層項目 (如 "- ")
                     nextContent = "- ";
                 } else {
-                    // 無縮排項目 (如 "- ") -> 清除標記變回普通行首
                     nextContent = "";
                 }
-                
                 editor.value = value.substring(0, lineStart) + nextContent + value.substring(start);
                 editor.selectionStart = editor.selectionEnd = lineStart + nextContent.length;
                 editor.dispatchEvent(new Event('input'));
             } 
-            // 2. 如果當前行只有空格縮排
             else if (!marker && indent.length > 0 && currentLine === indent) {
                 e.preventDefault();
                 editor.value = value.substring(0, lineStart) + "" + value.substring(start);
                 editor.selectionStart = editor.selectionEnd = lineStart;
                 editor.dispatchEvent(new Event('input'));
             }
-            // 3. 正常輸入後的 Enter（補全邏輯）
             else {
                 e.preventDefault();
                 let nextMarker = marker || "";
@@ -177,7 +177,6 @@ window.onload = () => {
         if (d) { editor.value = d; highlightContent(); updateStats(d.length); triggerW(); }
     } else { highlightContent(); triggerW(); }
 
-    // v6.14 行動版預設檢視模式
     if (window.innerWidth <= 768) {
         document.getElementById('editorPanel').classList.remove('active');
         document.getElementById('previewPanel').classList.add('active');
