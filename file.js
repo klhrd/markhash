@@ -1,17 +1,45 @@
 const editor = document.getElementById('editor');
 const editorHighlighting = document.getElementById('editor-highlighting');
-const preview = document.getElementById('preview');
 const sizeText = document.getElementById('sizeText');
 const sizeDot = document.getElementById('sizeDot');
 const urlStats = document.getElementById('urlStats');
 
-// v6.14 Web Worker（CDN 依賴一律釘選版本，避免上游 breaking change）
+// v6.14 CDN 依賴（一律釘選版本，避免上游 breaking change）
 const CDN = {
     marked: 'https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js',
     lzString: 'https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js',
     katex: 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js',
-    katexExt: 'https://cdn.jsdelivr.net/npm/marked-katex-extension@5.1.13/lib/index.umd.js'
+    katexExt: 'https://cdn.jsdelivr.net/npm/marked-katex-extension@5.1.13/lib/index.umd.js',
+    katexCss: 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css',
+    markdownCss: 'https://cdnjs.cloudflare.com/ajax/libs/github-markdown-css/5.2.0/github-markdown.min.css'
 };
+
+// v6.14.3 預覽採 Shadow DOM 隔離：文件內 <style> 只作用於預覽區，
+// 不會外洩影響編輯器與整個介面（如 * { font-size: 60px }）
+const previewHost = document.getElementById('preview');
+let preview = previewHost;
+let previewShadow = null;
+if (previewHost.attachShadow && window.CSSStyleSheet && CSSStyleSheet.prototype.replaceSync) {
+    previewShadow = previewHost.attachShadow({ mode: 'open' });
+    preview = document.createElement('div');
+    preview.className = 'markdown-body';
+    previewShadow.appendChild(preview);
+    const localSheet = new CSSStyleSheet();
+    localSheet.replaceSync('.markdown-body{background:transparent!important;color:var(--text-primary)!important;line-height:1.8}.katex-display{background:transparent!important;color:inherit;padding:10px 0}');
+    previewShadow.adoptedStyleSheets = [localSheet];
+    Promise.all([
+        fetch(CDN.katexCss).then((r) => r.text()),
+        fetch(CDN.markdownCss).then((r) => r.text())
+    ]).then(([katexCssText, mdCssText]) => {
+        // KaTeX CSS 內字型為相對路徑，改寫為 CDN 絕對路徑（constructable sheet 以文件 base 解析）
+        const fontBase = CDN.katexCss.replace(/katex\.min\.css$/, 'fonts/');
+        const katexSheet = new CSSStyleSheet();
+        katexSheet.replaceSync(katexCssText.replace(/url\((['"]?)fonts\//g, `url($1${fontBase}`));
+        const mdSheet = new CSSStyleSheet();
+        mdSheet.replaceSync(mdCssText);
+        previewShadow.adoptedStyleSheets = [katexSheet, mdSheet, localSheet];
+    }).catch(() => {});
+}
 
 // WHOLE_DOCUMENT: 讓 DOMPurify 一併消毒 <head>，否則文件開頭的 <style> 會被 HTML 解析器
 // 放進 <head> 而遭 fragment 模式靜默丟棄（內文中段的 <style> 則不受影響）
@@ -77,6 +105,15 @@ function updateStats(len) {
 
 function toggleStats(e) { e.stopPropagation(); urlStats.classList.toggle('active'); }
 
+// 游標是否位於 <style>/<script> 原始碼區塊內（未閉合）
+function inRawBlock(value, pos) {
+    const before = value.substring(0, pos);
+    let lastOpen = -1, lastClose = -1;
+    for (const m of before.matchAll(/<(style|script)\b/gi)) lastOpen = m.index;
+    for (const m of before.matchAll(/<\/(style|script)>/gi)) lastClose = m.index;
+    return lastOpen > lastClose;
+}
+
 // v6.14 編輯器增強：智慧清單 Enter 退回邏輯
 editor.addEventListener('keydown', (e) => {
     // IME（注音/倉頡等）組字中放行，避免選字 Enter 被插入換行或清單符號
@@ -96,6 +133,22 @@ editor.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
         const lineStart = value.lastIndexOf('\n', start - 1) + 1;
         const currentLine = value.substring(lineStart, start);
+
+        // <style>/<script> 區塊內：不自動填清單符號（如 CSS 的 * { 會被誤判為清單），
+        // 改為智慧縮排：沿用目前縮排，行尾 { 或 : 加一層，行首 } 退一層
+        if (inRawBlock(value, start)) {
+            e.preventDefault();
+            const indent = currentLine.match(/^\s*/)[0];
+            const trimmed = currentLine.trim();
+            let nextIndent = indent;
+            if (/\{$/.test(trimmed) || /:$/.test(trimmed)) nextIndent += '    ';
+            else if (/^\}/.test(trimmed)) nextIndent = indent.length > 3 ? ' '.repeat(indent.length - 4) : '';
+            editor.value = value.substring(0, start) + '\n' + nextIndent + value.substring(end);
+            editor.selectionStart = editor.selectionEnd = start + 1 + nextIndent.length;
+            editor.dispatchEvent(new Event('input'));
+            return;
+        }
+
         const match = currentLine.match(/^(\s*)([-*+]\s+|\d+\.\s+)?/);
         
         if (match) {

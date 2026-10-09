@@ -56,6 +56,19 @@
 - 安全性：`<style>` 允許是 DOMPurify html profile 的既有行為（內文中段本來就會生效），本次修復只是讓文件開頭的行為一致，未擴大攻擊面。CSS 無法執行 JS，但分享連結本就允許他人 CSS 注入（樣式偽造/追蹤），屬既有設計取捨。
 - 本次同時 bump `CACHE_NAME` 至 `v6.14.2`（原則 4 首次落實）。
 
+---
+
+## v6.14.3（branch: `fix/preview-style-isolation`）：預覽樣式隔離 + 原始碼區塊縮排
+
+| # | 問題 | 根因 | 修復 | 狀態 |
+|---|------|------|------|------|
+| S-1 | 文件內 `<style>`（如 `* { font-size: 60px }`）把編輯區/整個介面字體放大 | `<style>` 是文檔級作用域：預覽插入的 style 元素影響整份頁面，並非僅預覽區 | 預覽改為 **Shadow DOM**（`#preview` attachShadow），文件樣式被隔離在 shadow tree 內無法外洩；KaTeX 與 github-markdown CSS 改以 constructable stylesheet `adoptedStyleSheets` 注入 shadow 內（KaTeX 字型相對路徑改寫為 CDN 絕對路徑），並移除 index.html 對應的兩個 `<link>`。不支援的舊瀏覽器自動退回舊行為 | ✅ |
+| S-2 | `<style>/<script>` 區塊內按 Enter 會自動填清單符號（CSS 的 `* {` 被誤判為 `* ` 清單） | Enter 智慧清單的 regex `/^(\s*)([-*+]\s+)?/` 不認識原始碼區塊 | 新增 `inRawBlock()`（追蹤游標前未閉合的 `<style>`/`<script>` tag），區塊內 Enter：**不填清單符號**，改為智慧縮排——沿用目前縮排、行尾 `{`/`:` 加一層（4 空格）、行首 `}` 退一層 | ✅ |
+
+備註：
+- Shadow DOM 隔離後，使用者文件中的 `<style>` 可正常美化預覽區（含 `*` 萬用選擇器），但 `body`/`html`/`:root` 選擇器在 shadow 內不會命中（可改用 `.markdown-body` 選擇器）。
+- `CACHE_NAME` bump 至 `v6.14.3`（原則 4）。
+
 ## 未來待辦（Backlog，本次不處理）
 
 - 編輯器 `editor.value = ...` 直接賦值破壞原生 undo stack（Ctrl+Z 失效）→ 改用 `setRangeText` 或 `execCommand('insertText')`。
