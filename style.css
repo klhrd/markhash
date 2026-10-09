@@ -97,4 +97,12 @@ button.icon-btn:hover { background-color: var(--hover-bg); color: var(--text-pri
 #toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); background: var(--text-primary); color: var(--bg-paper); padding: 12px 24px; border-radius: 12px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 2000; pointer-events: none; }
 #toast.show { opacity: 1; }
 
+:root { scrollbar-width: thin; scrollbar-color: var(--border-color) transparent; }
+
+::-webkit-scrollbar { width: 10px; height: 10px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border-color); border: 2px solid transparent; border-radius: 10px; background-clip: content-box; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
+::-webkit-scrollbar-corner { background: transparent; }
+
 @media (max-width: 768px) { #preview-container { padding: 24px; } .panel { display: none; } .panel.active { display: flex; } .url-stats span { font-size: 11px; } }
