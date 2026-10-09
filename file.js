@@ -190,17 +190,54 @@ editor.addEventListener('keydown', (e) => {
     }
 });
 
+// LaTeX 上色：整體 h-math，\command 另標深色
+function colorMath(m) {
+    return `<span class="h-math">${m.replace(/(\\[a-zA-Z]+)/g, '</span><span class="h-math-cmd">$1</span><span class="h-math">')}</span>`;
+}
+
+// CSS 迷你上色：註解、字串、選擇器、屬性、值（操作於已跳脫文字）
+function colorCss(css) {
+    const ph = new Map();
+    let n = 0;
+    const keep = (c) => { const id = `\uE100${n++}\uE101`; ph.set(id, c); return id; };
+    let out = css;
+    out = out.replace(/\/\*[\s\S]*?\*\//g, m => keep(`<span class="h-comment">${m}</span>`));
+    out = out.replace(/"[^"\n]*"|'[^'\n]*'/g, m => keep(`<span class="h-string">${m}</span>`));
+    // 屬性: 值（值不跨行、不含 {}，後接 ; } 或換行；lookahead 保留 ; 給下一條）
+    out = out.replace(/(^|[{;])(\s*)(-{0,2}[a-zA-Z][a-zA-Z-]*)(\s*:\s*)([^\n{};]+?)(\s*)(?=[;}\n]|$)/gm,
+        (m, pre, sp, prop, colon, val, tail) => `${pre}${sp}<span class="h-css-prop">${prop}${colon}</span><span class="h-css-val">${val}</span>${tail}`);
+    // 選擇器：行首到 { 之間（含偽類、子選擇器 >）
+    out = out.replace(/^([^\n{}]*?)(\s*\{)/gm, (m, sel, brace) => sel.trim() ? `<span class="h-css-sel">${sel}</span>${brace}` : m);
+    return ph.size > 0 ? out.replace(new RegExp(Array.from(ph.keys()).join('|'), 'g'), id => ph.get(id)) : out;
+}
+
 function highlightContent() {
     const text = editor.value || "";
-    let html = text.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+    let html = text.replace(/&/g, '\u0026amp;').replace(/</g, '\u0026lt;').replace(/>/g, '\u0026gt;');
     const placeholders = new Map();
     let counter = 0;
     const addP = (c) => { const id = `\uE000${counter++}\uE001`; placeholders.set(id, c); return id; };
 
     html = html.replace(/```[\s\S]*?```/g, m => addP(`<span class="h-code">${m}</span>`));
-    html = html.replace(/\$\$[\s\S]*?\$\$/g, m => addP(`<span class="h-math">${m}</span>`));
+    html = html.replace(/\$\$[\s\S]*?\$\$/g, m => addP(colorMath(m)));
     html = html.replace(/`[^`\n]+`/g, m => addP(`<span class="h-code">${m}</span>`));
-    html = html.replace(/\$([^\$\n]+?)\$/g, m => addP(`<span class="h-math">${m}</span>`));
+    html = html.replace(/\$([^\$\n]+?)\$/g, m => addP(colorMath(m)));
+
+    // <style>/<script> 原始碼區塊：整段抽成 placeholder，內容不套 Markdown 規則
+    // （避免 CSS 的 * {、#id 被 Markdown 誤判成清單/標題顏色），HTML 標籤與 CSS 內容另標色
+    // 注意：此時文字已跳脫，標籤需以跳脫形式匹配
+    html = html.replace(/(\u0026lt;style(?:\s[^&\n]*?)?\u0026gt;)([\s\S]*?)(\u0026lt;\/style\u0026gt;)/gi,
+        (m, open, css, close) => addP(`<span class="h-html">${open}</span>${colorCss(css)}<span class="h-html">${close}</span>`));
+    html = html.replace(/(\u0026lt;script(?:\s[^&\n]*?)?\u0026gt;)([\s\S]*?)(\u0026lt;\/script\u0026gt;)/gi,
+        (m, open, js, close) => addP(`<span class="h-html">${open}</span><span class="h-code">${js}</span><span class="h-html">${close}</span>`));
+    // 輸入中尚未閉合的區塊：比照處理到文末
+    html = html.replace(/(\u0026lt;style(?:\s[^&\n]*?)?\u0026gt;)([\s\S]*)$/i,
+        (m, open, css) => addP(`<span class="h-html">${open}</span>${colorCss(css)}`));
+    html = html.replace(/(\u0026lt;script(?:\s[^&\n]*?)?\u0026gt;)([\s\S]*)$/i,
+        (m, open, js) => addP(`<span class="h-html">${open}</span><span class="h-code">${js}</span>`));
+
+    // 內聯 HTML 標籤另標色
+    html = html.replace(/\u0026lt;\/?[a-zA-Z][a-zA-Z0-9-]*(?:\s[^&\n]*?)?\/?\u0026gt;/g, m => addP(`<span class="h-html">${m}</span>`));
 
     const formatP = (m, cls) => addP(`<span class="${cls}">${m}</span>`);
     html = html.replace(/(\*\*\*|___)(?=\S)([\s\S]*?\S)\1/g, m => formatP(m, 'h-bold-italic'));
@@ -208,10 +245,10 @@ function highlightContent() {
     html = html.replace(/(\*|_)(?=\S)([\s\S]*?\S)\1/g, m => formatP(m, 'h-italic'));
     html = html.replace(/(~~)(?=\S)([\s\S]*?\S)\1/g, m => formatP(m, 'h-strikethrough'));
     
-    html = html.replace(/^(\s*([-*+]|\d+\.)\s+)(.*)/gm, '<span class="h-list">$1</span>$3');
+    html = html.replace(/^([ \t]*([-*+]|\d+\.)[ \t]+)(.*)/gm, '<span class="h-list">$1</span>$3');
     html = html.replace(/^(#+)(.*)/gm, '<span class="h-heading">$1$2</span>');
     html = html.replace(/\[(.*?)\]\((.*?)\)/g, '<span class="h-link-text">[$1]</span>($2)');
-    html = html.replace(/^(\s*>\s*)(.*)/gm, '<span class="h-quote">$1$2</span>');
+    html = html.replace(/^([ \t]*\u0026gt;[ \t]*)(.*)/gm, '<span class="h-quote">$1$2</span>');
 
     if (placeholders.size > 0) {
         const re = new RegExp(Array.from(placeholders.keys()).join('|'), 'g');

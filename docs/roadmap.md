@@ -69,6 +69,22 @@
 - Shadow DOM 隔離後，使用者文件中的 `<style>` 可正常美化預覽區（含 `*` 萬用選擇器），但 `body`/`html`/`:root` 選擇器在 shadow 內不會命中（可改用 `.markdown-body` 選擇器）。
 - `CACHE_NAME` bump 至 `v6.14.3`（原則 4）。
 
+---
+
+## v6.14.4（branch: `feat/editor-syntax-colors`）：編輯器 HTML/CSS/LaTeX 語法上色
+
+| # | 項目 | 說明 | 狀態 |
+|---|------|------|------|
+| C-1 | `<style>/<script>` 區塊語法上色 | 區塊先抽成 placeholder（內容不再被 Markdown 規則誤判——CSS 的 `* {` 不再變清單紫、`#id` 不再變標題藍），內部另標色：HTML 標籤 teal、CSS 選擇器橘/屬性藍/值綠/註解灰斜體/字串琥珀；未閉合區塊（輸入中）比照處理 | ✅ |
+| C-2 | 內聯 HTML 標籤上色 | 一般文句中的 `<div>`、`<br/>` 等標籤以 teal 另標色 | ✅ |
+| C-3 | LaTeX `\command` 另標色 | 數學式整體維持 magenta，反斜線指令（`\frac`、`\sum` 等）另標深一階的色 | ✅ |
+| C-4 | 引言規則修復（既有 bug） | 原規則匹配原始大於符號，但文字在該階段已跳脫為實體形式，引言上色從未生效；改為匹配跳脫後的形式 | ✅ |
+
+備註：
+- 上色為 regex 迷你實作（輕量化原則），非完整語言解析器；多重偽類選擇器跨行等少數邊角會有色偏，屬可接受範圍。
+- 開發備忘：編輯工具會將參數中的 HTML 實體字元（amp/lt/gt）解碼，撰寫此類字面值時須以 `\u0026` Unicode 跳脫形式寫進 JS 原始碼。
+- `CACHE_NAME` bump 至 `v6.14.4`（原則 4）。
+
 ## 未來待辦（Backlog，本次不處理）
 
 - 編輯器 `editor.value = ...` 直接賦值破壞原生 undo stack（Ctrl+Z 失效）→ 改用 `setRangeText` 或 `execCommand('insertText')`。
