@@ -305,11 +305,27 @@ document.addEventListener('keydown', (e) => {
     if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); downloadFile(); }
 });
 
-function toggleMobileView() {
-    document.getElementById('editorPanel').classList.toggle('active');
-    document.getElementById('previewPanel').classList.toggle('active');
-    document.getElementById('toggleIcon').innerText = document.getElementById('previewPanel').classList.contains('active') ? 'edit' : 'visibility';
+// 檢視模式：split（分割顯示，桌機預設）/ edit（僅編輯）/ view（僅預覽），icon 顯示當前模式
+const VIEW_ICONS = { split: 'computer', edit: 'edit', view: 'visibility' };
+let viewMode = 'split';
+function applyViewMode(mode) {
+    viewMode = mode;
+    document.getElementById('editorPanel').classList.toggle('active', mode !== 'view');
+    document.getElementById('previewPanel').classList.toggle('active', mode !== 'edit');
+    document.getElementById('toggleIcon').innerText = VIEW_ICONS[mode];
 }
+function toggleView() {
+    // 桌機：分割 → 僅編輯 → 僅預覽循環；行動版跳過分割
+    const order = window.innerWidth <= 768 ? ['edit', 'view'] : ['split', 'edit', 'view'];
+    applyViewMode(order[(order.indexOf(viewMode) + 1) % order.length]);
+}
+// 跨越 768px 斷點時修正不適用的檢視模式（分割不適合手機）
+(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const onChange = (e) => { if (e.matches && viewMode === 'split') applyViewMode('edit'); };
+    if (mq.addEventListener) mq.addEventListener('change', onChange);
+    else if (mq.addListener) mq.addListener(onChange);
+})();
 
 function showToast(m) { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
 function copyToClipboard(t) { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(() => showToast("Copied")).catch(() => fallbackCopy(t)); } else { fallbackCopy(t); } }
@@ -344,14 +360,17 @@ document.addEventListener('drop', (e) => {
 });
 function downloadFile() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([editor.value], {type: 'text/markdown'})); a.download = 'markhash.md'; a.click(); }
 
-window.onload = () => {
+// ---- 啟動（script 於 body 末端同步執行：內容載入 + 初始檢視模式，避免行動版面板閃爍）----
+(() => {
     const h = window.location.hash.substring(1);
+    let fromLink = false;
     if (h) {
         // compress('') = 'Q'（合法空文件）；LZString 對無效輸入也可能回傳空字串而非 null，
         // 故以往返驗證（compress(decompress(h)) === h）區分合法連結與損毀/截斷連結
         const d = LZString.decompressFromEncodedURIComponent(h);
         if (d !== null && d !== undefined && LZString.compressToEncodedURIComponent(d) === h) {
             editor.value = d; highlightContent(); updateStats(d.length); triggerW();
+            fromLink = true;
         } else showToast('Link may be damaged or truncated');
     } else {
         // 無 hash 時還原本機草稿（有效連結優先，損毀連結不被草稿覆蓋）
@@ -361,15 +380,9 @@ window.onload = () => {
         } catch (e) {}
         highlightContent(); updateStats(editor.value.length); triggerW();
     }
-
-    // 行動版初始頁面：空白文件落在編輯頁，帶內容（分享連結）落在展示頁
-    if (window.innerWidth <= 768) {
-        const showPreview = editor.value.trim() !== '';
-        document.getElementById('editorPanel').classList.toggle('active', !showPreview);
-        document.getElementById('previewPanel').classList.toggle('active', showPreview);
-        document.getElementById('toggleIcon').innerText = showPreview ? 'edit' : 'visibility';
-    }
-};
+    // 桌機預設分割顯示；行動版：分享連結（讀者）落在檢視，草稿/空白（作者）落在編輯
+    applyViewMode(window.innerWidth <= 768 ? (fromLink && editor.value.trim() !== '' ? 'view' : 'edit') : 'split');
+})();
 
 // PWA：註冊 Service Worker（僅在 http/https 環境，file:// 不適用）
 if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {

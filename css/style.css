@@ -61,7 +61,8 @@ button.icon-btn:hover { background-color: var(--hover-bg); color: var(--text-pri
 
 .dropdown { position: relative; }
 .container { display: flex; flex: 1; overflow: hidden; }
-.panel { flex: 1; display: flex; flex-direction: column; height: 100%; overflow: hidden; background: var(--bg-paper); position: relative; }
+.panel { flex: 1; display: none; flex-direction: column; height: 100%; overflow: hidden; background: var(--bg-paper); position: relative; }
+.panel.active { display: flex; }
 #editorPanel { border-right: 1px solid var(--border-color); }
 
 .editor-container { position: relative; flex: 1; overflow: hidden; }
@@ -129,4 +130,4 @@ button.icon-btn:hover { background-color: var(--hover-bg); color: var(--text-pri
 ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 ::-webkit-scrollbar-corner { background: transparent; }
 
-@media (max-width: 768px) { #preview-container { padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); } .panel { display: none; } .panel.active { display: flex; } .url-stats span { font-size: 11px; } }
+@media (max-width: 768px) { #preview-container { padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); } .url-stats span { font-size: 11px; } }

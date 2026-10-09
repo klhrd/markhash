@@ -172,6 +172,20 @@
 - 離線字型（KaTeX woff2 進 SW）依決策**不納入**，維持輕量化。
 - `CACHE_NAME` bump 至 `v6.14.10`（原則 4）。
 
+---
+
+## v6.14.11（branch: `feat/view-modes`）：三態檢視模式
+
+| # | 項目 | 說明 | 狀態 |
+|---|------|------|------|
+| VM-1 | 檢視模式系統 | 桌機預設**分割顯示**（icon `computer`），點擊循環分割 → 僅編輯（`edit`）→ 僅預覽（`visibility`）→ 分割；行動版循環僅編輯 ↔ 僅預覽（跳過分割）。icon 改為顯示**當前模式** | ✅ |
+| VM-2 | `.active` 全域化 | `.panel` 顯示改由 `.active` 全域控制（原本僅行動版 media query 生效），桌機的單面板模式才有效；HTML 靜態預設雙 panel active（分割） | ✅ |
+| VM-3 | 啟動改為同步 | 內容載入與初始模式從 `window.onload` 移至 script 底部同步執行（body 末端 DOM 已就緒），消除行動版 onload 前的雙面板擠壓閃爍 | ✅ |
+| VM-4 | 初始模式來源感知 | 分享連結（讀者）→ 檢視；草稿還原/空白（作者）→ 編輯；桌機一律分割 | ✅ |
+| VM-5 | 跨斷點修正 | `matchMedia` 監聽：跨入 768px 時若處於分割自動切為僅編輯（解決既有「旋轉後擠壓」問題） | ✅ |
+
+- `CACHE_NAME` bump 至 `v6.14.11`（原則 4）。
+
 ## 未來待辦（Backlog，本次不處理）
 
 - 編輯器 `editor.value = ...` 直接賦值破壞原生 undo stack（Ctrl+Z 失效）→ 改用 `setRangeText` 或 `execCommand('insertText')`。

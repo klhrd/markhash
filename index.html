@@ -49,8 +49,8 @@
             <div class="dot" id="sizeDot"></div>
             <span id="sizeText">0 chars</span>
         </div>
-        <button class="icon-btn" onclick="toggleMobileView()" aria-label="Toggle preview">
-            <span class="material-symbols-outlined" id="toggleIcon">visibility</span>
+        <button class="icon-btn" onclick="toggleView()" aria-label="Toggle view">
+            <span class="material-symbols-outlined" id="toggleIcon">computer</span>
         </button>
         <div class="dropdown">
             <button class="icon-btn" onclick="toggleMenu(event, 'fileMenu')" aria-label="File menu"><span class="material-symbols-outlined">save</span></button>
@@ -95,7 +95,7 @@
 "></textarea>
         </div>
     </section>
-    <section class="panel" id="previewPanel">
+    <section class="panel active" id="previewPanel">
         <div id="preview-container"><div id="preview" class="markdown-body"></div></div>
     </section>
 </div>
