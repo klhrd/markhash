@@ -87,7 +87,9 @@ button.icon-btn:hover { background-color: var(--hover-bg); color: var(--text-pri
 .h-strikethrough { text-decoration: line-through; opacity: 0.6; }
 .h-code { color: var(--h-code); background-color: rgba(217, 119, 6, 0.1); }
 .h-list { color: var(--h-list); font-weight: bold; }
-.h-quote { color: var(--h-quote); font-style: italic; border-left: 2px solid var(--border-color); padding-left: 4px; }
+/* 疊層高亮類別不得含任何影響版面的屬性（border/padding/margin 會使文字與游標錯位）；
+   quote 左緣色帶以背景漸層繪製：零版面影響、行內換行時每視覺行都會出現 */
+.h-quote { color: var(--h-quote); font-style: italic; background: linear-gradient(90deg, var(--border-color) 0 2px, transparent 2px); }
 .h-link-text { color: var(--h-link); text-decoration: underline; }
 .h-math { color: var(--h-math); font-weight: 500; }
 .h-html { color: var(--h-html); }

@@ -186,6 +186,16 @@
 
 - `CACHE_NAME` bump 至 `v6.14.11`（原則 4）。
 
+---
+
+## v6.14.12（branch: `fix/quote-caret-alignment`）：引言行游標錯位修復
+
+| # | 問題 | 根因 | 修復 | 狀態 |
+|---|------|------|------|------|
+| QA-1 | 編輯區引言行的游標位置與顯示文字不一致 | `.h-quote` 的 `border-left: 2px` + `padding-left: 4px` 佔版面空間，高亮疊層的引言文字被推右 6px，textarea 的游標與實際文字位置不動 → 錯位。違反疊層不變量：**高亮 class 不得影響任何版面度量**（已稽核其餘 `.h-*` 類別皆無版面屬性；bold/italic 使用等寬字型不改 advance width，安全） | 改以 `linear-gradient(90deg, var(--border-color) 0 2px, transparent 2px)` 背景繪製左緣 2px 色帶——零版面影響、跨視覺行換行時每行都會出現、深淺主題自動跟隨 `--border-color` | ✅ |
+
+- `CACHE_NAME` bump 至 `v6.14.12`（原則 4）。
+
 ## 未來待辦（Backlog，本次不處理）
 
 - 編輯器 `editor.value = ...` 直接賦值破壞原生 undo stack（Ctrl+Z 失效）→ 改用 `setRangeText` 或 `execCommand('insertText')`。
