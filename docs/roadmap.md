@@ -218,6 +218,16 @@
 
 - `CACHE_NAME` bump 至 `v6.14.14`（原則 4；v6.14.13 為 tests 動畫段落版本，未動前端故未佔用快取編號）。
 
+---
+
+## v6.14.15（branch: `fix/print-pure-white`）：列印內容區域純白
+
+| 問題 | 根因 | 修復 | 狀態 |
+|------|------|------|------|
+| 列印/PDF 的內容區域有淡淡背景而非純白 | `.panel` 的 `background: var(--bg-paper)`（`#fbfbfb`）——print 區塊只強制了 `body` 白底，未清面板背景；當列印對話框開啟「背景圖形」或 PDF 匯出器保留 CSS 背景時，整個預覽面板印成淡灰 | `@media print` 補 `.panel { background: transparent !important }`，內容區域在任何列印設定下都落在純白 body 上 | ✅ |
+
+- `CACHE_NAME` bump 至 `v6.14.15`（原則 4）。
+
 ## 未來待辦（Backlog，本次不處理）
 
 - 編輯器 `editor.value = ...` 直接賦值破壞原生 undo stack（Ctrl+Z 失效）→ 改用 `setRangeText` 或 `execCommand('insertText')`。

@@ -120,11 +120,13 @@ button.icon-btn:hover { background-color: var(--hover-bg); color: var(--text-pri
 /* 選取反白：半透明主題色調，語法色彩可透過選取範圍顯現（編輯器文字為透明色） */
 ::selection { background: var(--selection-bg); }
 
-/* 列印/匯出 PDF：只印預覽區（預覽在 shadow 內，其文字顏色由 localSheet 的 print 覆寫處理） */
+/* 列印/匯出 PDF：只印預覽區（預覽在 shadow 內，其文字顏色由 localSheet 的 print 覆寫處理）；
+   面板背景清為透明——「列印背景圖形」開啟時內容區域仍維持純白（--bg-paper 的 #fbfbfb 會印成淡灰） */
 @media print {
     header, #editorPanel, #toast { display: none !important; }
     body { height: auto !important; overflow: visible !important; background: #fff !important; }
     .container { display: block !important; overflow: visible !important; }
+    .panel { background: transparent !important; }
     #previewPanel { display: flex !important; }
     #preview-container { padding: 0 !important; overflow: visible !important; }
 }
