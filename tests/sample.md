@@ -1,4 +1,4 @@
-<!-- MarkHash 測試文件：整份貼進編輯器即可驗證語法上色、Shadow DOM 樣式隔離、KaTeX 與 GFM 渲染 -->
+<!-- MarkHash 測試文件：整份貼進編輯器即可驗證語法上色、Shadow DOM 樣式隔離、CSS 動畫（transition/@keyframes）、KaTeX 與 GFM 渲染 -->
 
 # MarkHash Test Document
 
@@ -68,3 +68,38 @@ $$\frac{a}{b} + \sqrt{x^2 + y^2} = \sum_{i=1}^{n} i$$
 <script>
 console.log("this never runs in preview");
 </script>
+
+## 9. Animations（transition + @keyframes）
+<style>
+.demo-pulse {
+    display: inline-block;
+    padding: 12px 24px;
+    border-radius: 10px;
+    background: #3b82f6;
+    color: #fff;
+    font-weight: 700;
+    animation: demo-pulse 1.6s ease-in-out infinite;
+}
+@keyframes demo-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.85; }
+    50% { transform: scale(1.08); opacity: 1; }
+}
+.demo-hover {
+    display: inline-block;
+    margin-top: 12px;
+    padding: 12px 24px;
+    border: 2px solid #8b5cf6;
+    border-radius: 10px;
+    cursor: pointer;
+    transition: all 0.35s ease;
+}
+.demo-hover:hover {
+    background: #8b5cf6;
+    color: #fff;
+    transform: translateY(-3px) scale(1.05);
+}
+</style>
+
+<div class="demo-pulse">@keyframes pulse — continuous</div>
+
+<div class="demo-hover">Hover me — transition</div>

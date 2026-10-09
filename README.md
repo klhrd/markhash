@@ -36,7 +36,7 @@ A lightweight, zero-build Markdown editor PWA. Your document lives entirely in t
 
 ## 📦 Deployment
 
-- Deploys through the GitHub Actions workflow (`.github/workflows/deploy.yml`) — pushing to `master` publishes automatically; changes under `docs/`, `tests/`, `tools/` or the README do not trigger a deploy
+- Deploys through the GitHub Actions workflow (`.github/workflows/deploy.yml`) — pushing to `master` publishes automatically; changes under `docs/`, `tools/` or the README do not trigger a deploy (`tests/` does — the live sample document is part of the site)
 - Repository settings: Pages → Build and deployment → Source must be set to **GitHub Actions**
 - Any change to frontend files (html/css/js) must bump `CACHE_NAME` in `sw.js` — the cache-first Service Worker will not refresh them otherwise (see principle 4 in `docs/roadmap.md`)
 

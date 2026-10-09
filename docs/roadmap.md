@@ -196,6 +196,17 @@
 
 - `CACHE_NAME` bump 至 `v6.14.12`（原則 4）。
 
+---
+
+## v6.14.13（branch: `test/sample-animations`）：測試文件加入 CSS 動畫段落
+
+| # | 項目 | 說明 | 狀態 |
+|---|------|------|------|
+| TA-1 | sample.md §9 動畫 | `@keyframes` 脈動徽章（持續播放、無需互動）與 `:hover` transition 方塊——驗證 Shadow DOM 預覽對使用者自訂動畫的完整支援（keyframes 在 shadow tree 內正常運行，與 v6.14.9 的 @font-face 問題本質不同：字型是文件級資源載入，keyframes 是樣式規則求值），同時驗證 colorCss 對 keyframes 步驟/transform/transition 的編輯器上色 | ✅ |
+| TA-2 | tests/ 移出 paths-ignore | sample.md 屬線上功能資產（開啟線上檔複製貼入即測），先前被 paths-ignore 擋住會停在舊版——移除使 test 文件隨部署更新，README 同步 | ✅ |
+
+- 不需 bump `CACHE_NAME`：未變更前端檔案，sample.md 不在 SW ASSETS。
+
 ## 未來待辦（Backlog，本次不處理）
 
 - 編輯器 `editor.value = ...` 直接賦值破壞原生 undo stack（Ctrl+Z 失效）→ 改用 `setRangeText` 或 `execCommand('insertText')`。
