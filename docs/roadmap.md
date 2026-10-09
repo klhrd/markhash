@@ -96,6 +96,19 @@
 
 - `CACHE_NAME` bump 至 `v6.14.5`（原則 4）。
 
+---
+
+## v6.14.6（branch: `feat/mobile-init-share-menu`）：初始頁面邏輯與分享選單改版
+
+| # | 項目 | 說明 | 狀態 |
+|---|------|------|------|
+| M-1 | 行動版初始頁面 | 空白文件落在編輯頁（作者情境），帶內容的分享連結落在展示頁（讀者情境）；桌機雙欄不受影響 | ✅ |
+| M-2 | 分享選單改版 | 移除 Is.gd / TinyURL 縮網址（含 `shortenUrl()` 與 proxy 相關程式碼），改為 **Copy URL**（複製完整連結）與 **Share**（Web Share API 系統分享面板；不支援的環境退回複製、AbortError 靜默略過）；選項與相關 toast 全部英文化 | ✅ |
+| M-3 | Import/Export 標籤 | 選單文字去除中文，僅保留英文（Import / Export） | ✅ |
+
+- `CACHE_NAME` bump 至 `v6.14.6`（原則 4）。
+- 縮網址服務的長度限制與 proxy 單點故障問題（見 v6.14.1 H-2）隨功能移除一併消失；完整連結分享回歸 MarkHash 的 hash 原生機制。
+
 ## 未來待辦（Backlog，本次不處理）
 
 - 編輯器 `editor.value = ...` 直接賦值破壞原生 undo stack（Ctrl+Z 失效）→ 改用 `setRangeText` 或 `execCommand('insertText')`。

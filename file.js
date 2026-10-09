@@ -277,32 +277,22 @@ function toggleMobileView() {
 }
 
 function showToast(m) { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
-function copyToClipboard(t) { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(() => showToast("已複製")).catch(() => fallbackCopy(t)); } else { fallbackCopy(t); } }
-function fallbackCopy(t) { const input = document.createElement('textarea'); input.value = t; document.body.appendChild(input); input.select(); try { document.execCommand('copy'); showToast("已複製"); } catch(e) { showToast("複製失敗"); } document.body.removeChild(input); }
+function copyToClipboard(t) { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(() => showToast("Copied")).catch(() => fallbackCopy(t)); } else { fallbackCopy(t); } }
+function fallbackCopy(t) { const input = document.createElement('textarea'); input.value = t; document.body.appendChild(input); input.select(); try { document.execCommand('copy'); showToast("Copied"); } catch(e) { showToast("Copy failed"); } document.body.removeChild(input); }
 function copyOriginalUrl() { copyToClipboard(window.location.href); }
 
-async function shortenUrl(service = 'isgd') {
-    if (!/^https?:$/.test(location.protocol)) { showToast('此功能需透過網頁伺服器（GitHub Pages）開啟'); return; }
-    showToast("產出中...");
-    try {
-        const shareUrl = encodeURIComponent(window.location.href);
-        let shortUrl = '';
-        if (service === 'isgd') {
-            // is.gd 原生支援 CORS（ACAO: *），直接呼叫可避開 proxy 單點故障
-            const r = await fetch(`https://is.gd/create.php?format=json&url=${shareUrl}`);
-            if (!r.ok) throw new Error('isgd error');
-            const d = await r.json();
-            shortUrl = d.shorturl || '';
-        } else {
-            // tinyurl 無開放 CORS，仍需透過 proxy
-            const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://tinyurl.com/api-create.php?url=' + shareUrl)}`);
-            if (!r.ok) throw new Error('proxy error');
-            const d = await r.json();
-            shortUrl = (d.contents || '').trim();
+// 分享：優先使用 Web Share API（系統分享面板），不支援時退回複製連結
+async function shareUrl() {
+    if (!/^https?:$/.test(location.protocol)) { showToast('Please open via a web server (GitHub Pages)'); return; }
+    if (navigator.share) {
+        try {
+            await navigator.share({ title: 'MarkHash', url: window.location.href });
+        } catch (e) {
+            if (e && e.name !== 'AbortError') copyToClipboard(window.location.href);
         }
-        if (shortUrl && shortUrl.startsWith('http')) copyToClipboard(shortUrl);
-        else showToast('失敗：內容過長或服務異常');
-    } catch (e) { showToast("失敗"); }
+    } else {
+        copyToClipboard(window.location.href);
+    }
 }
 
 function triggerUpload() { document.getElementById('fileInput').click(); }
@@ -321,10 +311,12 @@ window.onload = () => {
         if (d) { editor.value = d; highlightContent(); updateStats(d.length); triggerW(); }
     } else { highlightContent(); triggerW(); }
 
+    // 行動版初始頁面：空白文件落在編輯頁，帶內容（分享連結）落在展示頁
     if (window.innerWidth <= 768) {
-        document.getElementById('editorPanel').classList.remove('active');
-        document.getElementById('previewPanel').classList.add('active');
-        document.getElementById('toggleIcon').innerText = 'edit';
+        const showPreview = editor.value.trim() !== '';
+        document.getElementById('editorPanel').classList.toggle('active', !showPreview);
+        document.getElementById('previewPanel').classList.toggle('active', showPreview);
+        document.getElementById('toggleIcon').innerText = showPreview ? 'edit' : 'visibility';
     }
 };
 
