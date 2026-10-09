@@ -137,6 +137,18 @@
 | deploy paths-ignore | 補上 `tests/**`、`tools/**`（非網站內容變更不觸發部署） |
 | `CACHE_NAME` | bump 至 `v6.14.8`（原則 4） |
 
+---
+
+## v6.14.9（branch: `fix/katex-font-faces`）：KaTeX 字型修復
+
+| 項目 | 說明 | 狀態 |
+|------|------|------|
+| 數學式失去 KaTeX 襯線字體 | **根因**：v6.14.3 將 KaTeX CSS 移入 shadow adopted stylesheet 後，@font-face 在 shadow tree 內宣告不會觸發字型載入（部分瀏覽器行為），數學式 fallback 到系統字體。已先驗證排除其他嫌疑：60 個字型 url 全部 rewrite 正確（0 個殘留相對路徑）、github-markdown css 無任何 katex/math 干擾規則、CDN 字型 URL 200 + ACAO `*` + `font/woff2` | ✅ |
+| 修復方式 | @font-face 規則**提升至 document 層 `<style>`**（字型家族為文件全域，document 宣告後 shadow 內可引用）；其餘 KaTeX 排版規則留在 shadow sheet，樣式隔離不變 | ✅ |
+
+- `CACHE_NAME` bump 至 `v6.14.9`（原則 4）。
+- 離線字型快取（KaTeX woff2 進 SW ASSETS，約 20 檔）仍在 backlog，與輕量化原則取捨。
+
 ## 未來待辦（Backlog，本次不處理）
 
 - 編輯器 `editor.value = ...` 直接賦值破壞原生 undo stack（Ctrl+Z 失效）→ 改用 `setRangeText` 或 `execCommand('insertText')`。

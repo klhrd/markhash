@@ -33,8 +33,18 @@ if (previewHost.attachShadow && window.CSSStyleSheet && CSSStyleSheet.prototype.
     ]).then(([katexCssText, mdCssText]) => {
         // KaTeX CSS 內字型為相對路徑，改寫為 CDN 絕對路徑（constructable sheet 以文件 base 解析）
         const fontBase = CDN.katexCss.replace(/katex\.min\.css$/, 'fonts/');
+        const absKatex = katexCssText.replace(/url\((['"]?)fonts\//g, `url($1${fontBase}`);
+        // @font-face 提升至 document 層：shadow tree 內 adopted stylesheet 宣告的字型
+        // 在部分瀏覽器不會觸發載入，導致數學式 fallback 到系統字體；
+        // font-family 為文件全域，於 document 宣告後 shadow 內可正常引用
+        const fontFaces = absKatex.match(/@font-face\s*\{[^}]*\}/g) || [];
+        if (fontFaces.length) {
+            const fontStyle = document.createElement('style');
+            fontStyle.textContent = fontFaces.join('\n');
+            document.head.appendChild(fontStyle);
+        }
         const katexSheet = new CSSStyleSheet();
-        katexSheet.replaceSync(katexCssText.replace(/url\((['"]?)fonts\//g, `url($1${fontBase}`));
+        katexSheet.replaceSync(absKatex.replace(/@font-face\s*\{[^}]*\}/g, ''));
         const mdSheet = new CSSStyleSheet();
         mdSheet.replaceSync(mdCssText);
         previewShadow.adoptedStyleSheets = [katexSheet, mdSheet, localSheet];
