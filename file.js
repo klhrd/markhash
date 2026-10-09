@@ -86,7 +86,7 @@ let workerFailed = false;
 worker.onerror = () => {
     if (workerFailed) return;
     workerFailed = true;
-    showToast('預覽引擎初始化失敗，切換至備援模式');
+    showToast('Preview engine failed to load, switching to fallback mode');
     const load = (src) => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
     Promise.all([load(CDN.marked), load(CDN.katex)])
         .then(() => load(CDN.katexExt))
@@ -95,7 +95,7 @@ worker.onerror = () => {
             triggerW = debounce(renderOnMain, 150);
             renderOnMain();
         })
-        .catch(() => showToast('備援模式載入失敗，請檢查網路連線'));
+        .catch(() => showToast('Fallback failed to load, check your network'));
 };
 
 function updateStats(len) {

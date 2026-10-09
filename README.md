@@ -1,4 +1,4 @@
-# MarkHash v6.14
+# MarkHash
 
 這是一個輕量化的 Markdown 線上編輯器 PWA，支援即時預覽、KaTeX 數學公式以及透過 URL Hash 進行無伺服器分享。
 
