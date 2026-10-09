@@ -105,13 +105,35 @@ function updateStats(len) {
 
 function toggleStats(e) { e.stopPropagation(); urlStats.classList.toggle('active'); }
 
-// 游標是否位於 <style>/<script> 原始碼區塊內（未閉合）
-function inRawBlock(value, pos) {
+// 游標的程式碼情境：'fence' = ```/~~~ 圍籬內、'raw' = <style>/<script> 未閉合、'text' = 一般 Markdown
+// 行內 code 以等長空白消除，避免 `` `<script>` `` 之類教學文字誤判（圍籬計數先於消除，保護 ``` 開頭）
+function codeContext(value, pos) {
     const before = value.substring(0, pos);
+    let fences = 0;
+    for (const m of before.matchAll(/^[ \t]*(```|~~~)/gm)) fences++;
+    if (fences % 2 === 1) return 'fence';
+    const cleaned = before.replace(/`[^`\n]*`/g, (m) => ' '.repeat(m.length));
     let lastOpen = -1, lastClose = -1;
-    for (const m of before.matchAll(/<(style|script)\b/gi)) lastOpen = m.index;
-    for (const m of before.matchAll(/<\/(style|script)>/gi)) lastClose = m.index;
-    return lastOpen > lastClose;
+    for (const m of cleaned.matchAll(/<(style|script)\b/gi)) lastOpen = m.index;
+    for (const m of cleaned.matchAll(/<\/(style|script)>/gi)) lastClose = m.index;
+    return lastOpen > lastClose ? 'raw' : 'text';
+}
+
+// Undo 友善的編輯：優先 execCommand（完整保留 Ctrl+Z 堆疊、原生觸發 input），
+// 不支援時退回 setRangeText（手動補發 input）；空字串以 execCommand('delete') 處理
+function applyEdit(text, from, to) {
+    editor.focus();
+    editor.setSelectionRange(from, to);
+    let ok = false;
+    if (text === '') {
+        try { ok = document.execCommand('delete'); } catch (e) { ok = false; }
+    } else {
+        try { ok = document.execCommand('insertText', false, text); } catch (e) { ok = false; }
+    }
+    if (!ok) {
+        editor.setRangeText(text, from, to, 'end');
+        editor.dispatchEvent(new Event('input'));
+    }
 }
 
 // v6.14 編輯器增強：智慧清單 Enter 退回邏輯
@@ -125,27 +147,23 @@ editor.addEventListener('keydown', (e) => {
 
     if (e.key === 'Tab') {
         e.preventDefault();
-        editor.value = value.substring(0, start) + "    " + value.substring(end);
-        editor.selectionStart = editor.selectionEnd = start + 4;
-        editor.dispatchEvent(new Event('input'));
+        applyEdit('    ', start, end);
     }
 
     if (e.key === 'Enter') {
         const lineStart = value.lastIndexOf('\n', start - 1) + 1;
         const currentLine = value.substring(lineStart, start);
 
-        // <style>/<script> 區塊內：不自動填清單符號（如 CSS 的 * { 會被誤判為清單），
+        // 圍籬與 <style>/<script> 原始碼區塊：不自動填清單符號（如 CSS 的 * { 會被誤判），
         // 改為智慧縮排：沿用目前縮排，行尾 { 或 : 加一層，行首 } 退一層
-        if (inRawBlock(value, start)) {
+        if (codeContext(value, start) !== 'text') {
             e.preventDefault();
             const indent = currentLine.match(/^\s*/)[0];
             const trimmed = currentLine.trim();
             let nextIndent = indent;
             if (/\{$/.test(trimmed) || /:$/.test(trimmed)) nextIndent += '    ';
             else if (/^\}/.test(trimmed)) nextIndent = indent.length > 3 ? ' '.repeat(indent.length - 4) : '';
-            editor.value = value.substring(0, start) + '\n' + nextIndent + value.substring(end);
-            editor.selectionStart = editor.selectionEnd = start + 1 + nextIndent.length;
-            editor.dispatchEvent(new Event('input'));
+            applyEdit('\n' + nextIndent, start, end);
             return;
         }
 
@@ -157,21 +175,11 @@ editor.addEventListener('keydown', (e) => {
 
             if (marker && currentLine.trim() === marker.trim()) {
                 e.preventDefault();
-                let nextContent = "";
-                if (indent.length > 0) {
-                    nextContent = "- ";
-                } else {
-                    nextContent = "";
-                }
-                editor.value = value.substring(0, lineStart) + nextContent + value.substring(start);
-                editor.selectionStart = editor.selectionEnd = lineStart + nextContent.length;
-                editor.dispatchEvent(new Event('input'));
+                applyEdit(indent.length > 0 ? '- ' : '', lineStart, start);
             } 
             else if (!marker && indent.length > 0 && currentLine === indent) {
                 e.preventDefault();
-                editor.value = value.substring(0, lineStart) + "" + value.substring(start);
-                editor.selectionStart = editor.selectionEnd = lineStart;
-                editor.dispatchEvent(new Event('input'));
+                applyEdit('', lineStart, start);
             }
             else {
                 e.preventDefault();
@@ -180,10 +188,7 @@ editor.addEventListener('keydown', (e) => {
                     const num = parseInt(marker) + 1;
                     nextMarker = marker.replace(/^\d+/, num);
                 }
-                const insertion = "\n" + indent + nextMarker;
-                editor.value = value.substring(0, start) + insertion + value.substring(start);
-                editor.selectionStart = editor.selectionEnd = start + insertion.length;
-                editor.dispatchEvent(new Event('input'));
+                applyEdit('\n' + indent + nextMarker, start, end);
             }
             return;
         }
@@ -258,9 +263,10 @@ function highlightContent() {
 }
 
 const debounce = (f, w) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => f(...a), w); }; };
+const triggerH = debounce(highlightContent, 40);
 let triggerW = debounce(() => worker.postMessage({ text: editor.value }), 150);
 
-editor.addEventListener('input', () => { highlightContent(); updateStats(editor.value.length); triggerW(); });
+editor.addEventListener('input', () => { updateStats(editor.value.length); triggerH(); triggerW(); });
 editor.addEventListener('scroll', () => { editorHighlighting.scrollTop = editor.scrollTop; });
 
 function toggleMenu(e, id) { e.stopPropagation(); const m = document.getElementById(id); const s = m.classList.contains('show'); document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('show')); if (!s) m.classList.add('show'); }
