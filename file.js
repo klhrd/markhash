@@ -25,7 +25,7 @@ if (previewHost.attachShadow && window.CSSStyleSheet && CSSStyleSheet.prototype.
     preview.className = 'markdown-body';
     previewShadow.appendChild(preview);
     const localSheet = new CSSStyleSheet();
-    localSheet.replaceSync('.markdown-body{background:transparent!important;color:var(--text-primary)!important;line-height:1.8}.katex-display{background:transparent!important;color:inherit;padding:10px 0}');
+    localSheet.replaceSync('.markdown-body{background:transparent!important;color:var(--text-primary)!important;line-height:1.8}.katex-display{background:transparent!important;color:inherit;padding:10px 0}::selection{background:var(--selection-bg)}');
     previewShadow.adoptedStyleSheets = [localSheet];
     Promise.all([
         fetch(CDN.katexCss).then((r) => r.text()),

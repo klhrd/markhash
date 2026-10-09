@@ -10,6 +10,7 @@
     --h-link: #0891b2;        --h-math: #c026d3;
     --h-html: #0d9488;        --h-css-sel: #ea580c;     --h-css-prop: #2563eb;
     --h-css-val: #059669;      --h-comment: #94a3b8;     --h-math-cmd: #86198f;
+    --selection-bg: rgba(59, 130, 246, 0.28);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -24,6 +25,7 @@
         --h-link: #22d3ee;        --h-math: #e879f9;
         --h-html: #2dd4bf;        --h-css-sel: #fb923c;     --h-css-prop: #60a5fa;
         --h-css-val: #34d399;      --h-comment: #64748b;     --h-math-cmd: #f5d0fe;
+        --selection-bg: rgba(96, 165, 250, 0.38);
     }
 }
 
@@ -109,6 +111,9 @@ button.icon-btn:hover { background-color: var(--hover-bg); color: var(--text-pri
 #toast.show { opacity: 1; }
 
 :root { scrollbar-width: thin; scrollbar-color: var(--border-color) transparent; }
+
+/* 選取反白：半透明主題色調，語法色彩可透過選取範圍顯現（編輯器文字為透明色） */
+::selection { background: var(--selection-bg); }
 
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }

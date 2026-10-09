@@ -85,6 +85,17 @@
 - 開發備忘：編輯工具會將參數中的 HTML 實體字元（amp/lt/gt）解碼，撰寫此類字面值時須以 `\u0026` Unicode 跳脫形式寫進 JS 原始碼。
 - `CACHE_NAME` bump 至 `v6.14.4`（原則 4）。
 
+---
+
+## v6.14.5（branch: `style/selection`）：::selection 選取反白優化
+
+| # | 項目 | 說明 | 狀態 |
+|---|------|------|------|
+| V-1 | 選取色改為半透明主題色調 | 以 `--selection-bg`（亮/暗各一）取代瀏覽器預設實心反白：編輯器的語法著色可透過選取範圍顯現（textarea 文字本身透明，預設實心選取色會整片蓋掉語法顏色）。只設 background、不設 color，避免透明文字被染色而與底層高亮文字重疊 | ✅ |
+| V-2 | Shadow DOM 內補選取規則 | 文件樣式進不了 shadow tree，預覽區的選取規則補進 `localSheet`（CSS 變數可跨邊界繼承，自動跟隨亮/暗主題） | ✅ |
+
+- `CACHE_NAME` bump 至 `v6.14.5`（原則 4）。
+
 ## 未來待辦（Backlog，本次不處理）
 
 - 編輯器 `editor.value = ...` 直接賦值破壞原生 undo stack（Ctrl+Z 失效）→ 改用 `setRangeText` 或 `execCommand('insertText')`。
