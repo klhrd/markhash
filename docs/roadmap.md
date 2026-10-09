@@ -207,6 +207,17 @@
 
 - 不需 bump `CACHE_NAME`：未變更前端檔案，sample.md 不在 SW ASSETS。
 
+---
+
+## v6.14.14（branch: `style/toast-refresh`）：通知卡片樣式統一
+
+| # | 項目 | 說明 | 狀態 |
+|---|------|------|------|
+| TR-1 | Toast 改為 app 設計語言 | 原 toast 仍是最初的高對比反色塊（text-primary 底、bg-paper 字），未跟上演進的視覺語言——改為與 dropdown 相同的 paper 卡片配方：`--bg-paper` 底 + `--border-color` 邊框 + `--dropdown-shadow` 陰影 + 12px 圓角；動畫從純淡入改為淡入 + 上浮（`translate(-50%, 8px)` → `translate(-50%, 0)`） | ✅ |
+| TR-2 | Toast 行為修正 | 連續呼叫 `showToast` 時未清前次計時器 → 前一發的 2.5s 到期會提前關閉最新通知；改為 `clearTimeout` 佇列（連發以最後一發為準）。底部避讓 `env(safe-area-inset-bottom)`；`prefers-reduced-motion` 停用位移動畫 | ✅ |
+
+- `CACHE_NAME` bump 至 `v6.14.14`（原則 4；v6.14.13 為 tests 動畫段落版本，未動前端故未佔用快取編號）。
+
 ## 未來待辦（Backlog，本次不處理）
 
 - 編輯器 `editor.value = ...` 直接賦值破壞原生 undo stack（Ctrl+Z 失效）→ 改用 `setRangeText` 或 `execCommand('insertText')`。

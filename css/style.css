@@ -109,8 +109,11 @@ button.icon-btn:hover { background-color: var(--hover-bg); color: var(--text-pri
 .dropdown-item { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border: none; background: transparent; color: var(--text-primary); cursor: pointer; font-size: 14px; border-radius: 6px; width: 100%; text-align: left; }
 .dropdown-item:hover { background-color: var(--hover-bg); }
 
-#toast { position: fixed; bottom: 32px; left: 50%; transform: translateX(-50%); background: var(--text-primary); color: var(--bg-paper); padding: 12px 24px; border-radius: 12px; font-size: 14px; opacity: 0; transition: opacity 0.3s; z-index: 2000; pointer-events: none; }
-#toast.show { opacity: 1; }
+/* 通知卡片：與 dropdown 同一的設計語言（paper + 邊框 + 陰影 + 12px 圓角），
+   淡入並上浮；避讓 home indicator；尊重 reduced-motion */
+#toast { position: fixed; bottom: calc(32px + env(safe-area-inset-bottom)); left: 50%; transform: translate(-50%, 8px); background: var(--bg-paper); color: var(--text-primary); border: 1px solid var(--border-color); box-shadow: var(--dropdown-shadow); padding: 12px 24px; border-radius: 12px; font-size: 14px; opacity: 0; transition: opacity 0.3s, transform 0.3s; z-index: 2000; pointer-events: none; }
+#toast.show { opacity: 1; transform: translate(-50%, 0); }
+@media (prefers-reduced-motion: reduce) { #toast { transition: none; } }
 
 :root { scrollbar-width: thin; scrollbar-color: var(--border-color) transparent; }
 

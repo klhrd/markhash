@@ -327,7 +327,14 @@ function toggleView() {
     else if (mq.addListener) mq.addListener(onChange);
 })();
 
-function showToast(m) { const t = document.getElementById('toast'); document.getElementById('toastMsg').innerText = m; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+let toastTimer = null;
+function showToast(m) {
+    const t = document.getElementById('toast');
+    document.getElementById('toastMsg').innerText = m;
+    if (toastTimer) clearTimeout(toastTimer);
+    t.classList.add('show');
+    toastTimer = setTimeout(() => { t.classList.remove('show'); toastTimer = null; }, 2500);
+}
 function copyToClipboard(t) { if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(t).then(() => showToast("Copied")).catch(() => fallbackCopy(t)); } else { fallbackCopy(t); } }
 function fallbackCopy(t) { const input = document.createElement('textarea'); input.value = t; document.body.appendChild(input); input.select(); try { document.execCommand('copy'); showToast("Copied"); } catch(e) { showToast("Copy failed"); } document.body.removeChild(input); }
 function copyOriginalUrl() { copyToClipboard(window.location.href); }
