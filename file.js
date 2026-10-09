@@ -5,13 +5,22 @@ const sizeText = document.getElementById('sizeText');
 const sizeDot = document.getElementById('sizeDot');
 const urlStats = document.getElementById('urlStats');
 
-// v6.14 Web Worker
+// v6.14 Web Worker（CDN 依賴一律釘選版本，避免上游 breaking change）
+const CDN = {
+    marked: 'https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js',
+    lzString: 'https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js',
+    katex: 'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js',
+    katexExt: 'https://cdn.jsdelivr.net/npm/marked-katex-extension@5.1.13/lib/index.umd.js'
+};
+
+const SANITIZE_OPTS = { USE_PROFILES: { html: true, mathMl: true, svg: true }, ADD_ATTR: ['mathvariant', 'display'] };
+
 const workerScript = `
-    importScripts('https://cdn.jsdelivr.net/npm/marked/marked.min.js', 
-                  'https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js',
-                  'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js',
-                  'https://cdn.jsdelivr.net/npm/marked-katex-extension/lib/index.umd.js');
-    
+    importScripts('${CDN.marked}',
+                  '${CDN.lzString}',
+                  '${CDN.katex}',
+                  '${CDN.katexExt}');
+
     try { marked.use(self.markedKatex({ throwOnError: false })); marked.use({ gfm: true, breaks: true }); } catch(e) {}
 
     self.onmessage = function(e) {
@@ -27,9 +36,36 @@ const workerScript = `
 const worker = new Worker(URL.createObjectURL(new Blob([workerScript], { type: 'text/javascript' })));
 worker.onmessage = (e) => {
     const { html, hash, len } = e.data;
-    preview.innerHTML = DOMPurify.sanitize(html, { USE_PROFILES: { html: true, mathMl: true, svg: true }, ADD_ATTR: ['mathvariant', 'display'] });
-    if (hash) history.replaceState(null, null, '#' + hash);
+    preview.innerHTML = DOMPurify.sanitize(html, SANITIZE_OPTS);
+    // 空內容壓縮後為空字串，仍要更新 hash，否則清空後舊內容會殘留在 URL
+    try { history.replaceState(null, null, '#' + hash); } catch (err) {}
     updateStats(len);
+};
+
+// Worker 容錯：CDN 載入失敗時降級為主執行緒同步渲染
+function renderOnMain() {
+    const text = editor.value;
+    try {
+        preview.innerHTML = DOMPurify.sanitize(marked.parse(text), SANITIZE_OPTS);
+        try { history.replaceState(null, null, '#' + LZString.compressToEncodedURIComponent(text)); } catch (err) {}
+        updateStats(text.length);
+    } catch (err) {}
+}
+
+let workerFailed = false;
+worker.onerror = () => {
+    if (workerFailed) return;
+    workerFailed = true;
+    showToast('預覽引擎初始化失敗，切換至備援模式');
+    const load = (src) => new Promise((res, rej) => { const s = document.createElement('script'); s.src = src; s.onload = res; s.onerror = rej; document.head.appendChild(s); });
+    Promise.all([load(CDN.marked), load(CDN.katex)])
+        .then(() => load(CDN.katexExt))
+        .then(() => {
+            try { marked.use(markedKatex({ throwOnError: false })); marked.use({ gfm: true, breaks: true }); } catch (e) {}
+            triggerW = debounce(renderOnMain, 150);
+            renderOnMain();
+        })
+        .catch(() => showToast('備援模式載入失敗，請檢查網路連線'));
 };
 
 function updateStats(len) {
@@ -41,6 +77,9 @@ function toggleStats(e) { e.stopPropagation(); urlStats.classList.toggle('active
 
 // v6.14 編輯器增強：智慧清單 Enter 退回邏輯
 editor.addEventListener('keydown', (e) => {
+    // IME（注音/倉頡等）組字中放行，避免選字 Enter 被插入換行或清單符號
+    if (e.isComposing || e.keyCode === 229) return;
+
     const start = editor.selectionStart;
     const end = editor.selectionEnd;
     const value = editor.value;
@@ -127,7 +166,7 @@ function highlightContent() {
 }
 
 const debounce = (f, w) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => f(...a), w); }; };
-const triggerW = debounce(() => worker.postMessage({ text: editor.value }), 150);
+let triggerW = debounce(() => worker.postMessage({ text: editor.value }), 150);
 
 editor.addEventListener('input', () => { highlightContent(); updateStats(editor.value.length); triggerW(); });
 editor.addEventListener('scroll', () => { editorHighlighting.scrollTop = editor.scrollTop; });
@@ -151,13 +190,21 @@ function fallbackCopy(t) { const input = document.createElement('textarea'); inp
 function copyOriginalUrl() { copyToClipboard(window.location.href); }
 
 async function shortenUrl(service = 'isgd') {
+    if (!/^https?:$/.test(location.protocol)) { showToast('此功能需透過網頁伺服器（GitHub Pages）開啟'); return; }
     showToast("產出中...");
     try {
         let apiUrl = (service === 'isgd') ? `https://is.gd/create.php?format=json&url=${encodeURIComponent(window.location.href)}` : `https://tinyurl.com/api-create.php?url=${encodeURIComponent(window.location.href)}`;
         const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`);
+        if (!r.ok) throw new Error('proxy error');
         const d = await r.json();
-        let shortUrl = (service === 'isgd') ? JSON.parse(d.contents).shorturl : d.contents.trim();
+        let shortUrl = '';
+        if (service === 'isgd') {
+            try { shortUrl = JSON.parse(d.contents).shorturl || ''; } catch (err) { shortUrl = ''; }
+        } else {
+            shortUrl = (d.contents || '').trim();
+        }
         if (shortUrl && shortUrl.startsWith('http')) copyToClipboard(shortUrl);
+        else showToast('失敗：內容過長或服務異常');
     } catch (e) { showToast("失敗"); }
 }
 
@@ -183,3 +230,8 @@ window.onload = () => {
         document.getElementById('toggleIcon').innerText = 'edit';
     }
 };
+
+// PWA：註冊 Service Worker（僅在 http/https 環境，file:// 不適用）
+if ('serviceWorker' in navigator && /^https?:$/.test(location.protocol)) {
+    window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));
+}

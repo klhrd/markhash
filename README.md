@@ -1,4 +1,4 @@
-# MarkHash v6.13
+# MarkHash v6.14
 
 這是一個輕量化的 Markdown 線上編輯器 PWA，支援即時預覽、KaTeX 數學公式以及透過 URL Hash 進行無伺服器分享。
 
@@ -12,9 +12,14 @@
 
 ## 🚀 如何使用
 
-1. 直接開啟 `index.html`。
+1. 透過 GitHub Pages 網址開啟（本機開發可開啟 `index.html`，但分享與 Service Worker 功能需 http/https 環境）。
 2. 在左側輸入 Markdown 語法，右側即時顯示結果。
 3. 點擊分享按鈕即可複製含有內容的長連結或產生縮網址。
+
+## 📦 部署
+
+- 部署採用 GitHub Actions workflow（`.github/workflows/deploy.yml`），推送至 `master` 即自動發佈。
+- 儲存庫設定需將 Pages 的 Build and deployment 來源設為 **GitHub Actions**。
 
 ## 🛠 技術棧
 

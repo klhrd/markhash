@@ -11,3 +11,7 @@ orig.html
 
 # 有私密的 API Key 或環境變數
 .env
+
+# 文件目錄（roadmap 除外）
+docs/*
+!docs/roadmap.md
