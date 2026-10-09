@@ -125,6 +125,18 @@
 
 - `CACHE_NAME` bump 至 `v6.14.7`（原則 4；版本顯示已移除，快取版本為內部維護用）。
 
+---
+
+## v6.14.8（branch: `chore/folder-structure`）：資料夾結構整理
+
+| 變更 | 說明 |
+|------|------|
+| `js/file.js`、`css/style.css` | 核心程式與樣式移入專屬資料夾（index.html 與 sw.js ASSETS 路徑同步更新） |
+| `tests/sample.md` | 全功能測試文件（語法上色、Shadow DOM 隔離、KaTeX、GFM、消毒行為），貼進編輯器即可驗證 |
+| `tools/logo.html` | logo 的 SVG 設計工具自 `images/` 移至 `tools/`（非網站資產） |
+| deploy paths-ignore | 補上 `tests/**`、`tools/**`（非網站內容變更不觸發部署） |
+| `CACHE_NAME` | bump 至 `v6.14.8`（原則 4） |
+
 ## 未來待辦（Backlog，本次不處理）
 
 - 編輯器 `editor.value = ...` 直接賦值破壞原生 undo stack（Ctrl+Z 失效）→ 改用 `setRangeText` 或 `execCommand('insertText')`。

@@ -1,9 +1,9 @@
-const CACHE_NAME = 'markhash-v6.14.7';
+const CACHE_NAME = 'markhash-v6.14.8';
 const ASSETS = [
   './',
   './index.html',
-  './style.css',
-  './file.js',
+  './css/style.css',
+  './js/file.js',
   './manifest.json',
   './images/icons/icon-192.png',
   './images/icons/icon-512.png',
