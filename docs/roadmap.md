@@ -5,6 +5,7 @@
 1. **所有開發一律在新開的 branch 上進行**，勿直接改 `master`。
 2. **這是 GitHub Pages 專案，保持輕量化**：無建置流程、無 node_modules、純靜態檔案，改動越小越好。
 3. **部署必須走 GitHub Pages deploy yml**（`.github/workflows/deploy.yml`），不使用「deploy from branch」舊模式。
+4. **每次變更前端檔案（html/css/js）必須同步 bump `sw.js` 的 `CACHE_NAME`**：SW 採 cache-first，不改 sw.js 位元組內容就不會觸發更新，既有 PWA 使用者會永遠拿到舊快取。
 
 ---
 
@@ -42,6 +43,18 @@
 | H-1 | Console 警告 `apple-mobile-web-app-capable` deprecated | Chrome 要求新 meta 名稱 | 補上 `<meta name="mobile-web-app-capable" content="yes">`（舊 tag 保留給 iOS） | ✅ |
 | H-2 | 縮網址 CORS error（`No 'Access-Control-Allow-Origin'`） | allorigins proxy 不穩（408 逾時），且錯誤回應不帶 CORS headers，瀏覽器誤報為 CORS 問題；且分享連結經雙重編碼後 proxy 請求長達數 KB | 實測確認 **is.gd 原生支援 CORS（ACAO: \*）→ 改為直接呼叫**，擺脫 proxy 單點故障；tinyurl 無開放 CORS（ACAO 僅允許自家）→ 維持走 proxy，失敗時有 toast 提示。實測 is.gd：URL 上限 5000 字元（超過回 `errorcode:1`），≥4KB 時間歇性 `database insert failed`，且錯誤回應不帶 ACAO（瀏覽器會顯示為 CORS/網路錯誤，由 toast 統一提示） | ✅ |
 | H-3 | `sw.js: Uncaught TypeError: Failed to convert value to 'Response'`（×2） | fetch 失敗且非 navigate 請求時，catch 回傳 `undefined` 給 `respondWith` | 一律回傳 `Response.error()`；navigate fallback 亦保證非 undefined；`CACHE_NAME` bump 至 `v6.14.1` 觸發舊快取清理 | ✅ |
+
+---
+
+## v6.14.2（branch: `fix/style-tag-preview`）：文件開頭 `<style>` 不生效
+
+| 問題 | 根因（經 jsdom 全管線實測重現） | 修復 | 狀態 |
+|------|------|------|------|
+| Markdown 文件開頭的 `<style>` 不生效，內文中段的 `<style>` 卻正常 | DOMPurify fragment 模式用 `DOMParser` 解析成完整 Document 後**只消毒 `<body>`**。按 HTML 解析規範，出現在文件開頭（前方無任何 body 內容）的 `<style>` 會被放進 `<head>` → 不在 body → 被**靜默丟棄**（連 `DOMPurify.removed` 都無紀錄）。`<style>` 本身其實在 html profile 允許清單內，故放在段落後面就會生效 | `SANITIZE_OPTS` 加 `WHOLE_DOCUMENT: true`，消毒範圍涵蓋 `<head>`；輸出含 `<html><head>` 包裝，經 `preview.innerHTML` 賦值時瀏覽器會剝除外層標籤、保留 style 元素於原位。實測 KaTeX（inline/display/MathML/mathvariant）、表格、程式碼區塊皆不受影響 | ✅ |
+
+備註：
+- 安全性：`<style>` 允許是 DOMPurify html profile 的既有行為（內文中段本來就會生效），本次修復只是讓文件開頭的行為一致，未擴大攻擊面。CSS 無法執行 JS，但分享連結本就允許他人 CSS 注入（樣式偽造/追蹤），屬既有設計取捨。
+- 本次同時 bump `CACHE_NAME` 至 `v6.14.2`（原則 4 首次落實）。
 
 ## 未來待辦（Backlog，本次不處理）
 

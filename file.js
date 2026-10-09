@@ -13,7 +13,9 @@ const CDN = {
     katexExt: 'https://cdn.jsdelivr.net/npm/marked-katex-extension@5.1.13/lib/index.umd.js'
 };
 
-const SANITIZE_OPTS = { USE_PROFILES: { html: true, mathMl: true, svg: true }, ADD_ATTR: ['mathvariant', 'display'] };
+// WHOLE_DOCUMENT: 讓 DOMPurify 一併消毒 <head>，否則文件開頭的 <style> 會被 HTML 解析器
+// 放進 <head> 而遭 fragment 模式靜默丟棄（內文中段的 <style> 則不受影響）
+const SANITIZE_OPTS = { USE_PROFILES: { html: true, mathMl: true, svg: true }, ADD_ATTR: ['mathvariant', 'display'], WHOLE_DOCUMENT: true };
 
 const workerScript = `
     importScripts('${CDN.marked}',
