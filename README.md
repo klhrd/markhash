@@ -1,29 +1,50 @@
 # MarkHash
 
-這是一個輕量化的 Markdown 線上編輯器 PWA，支援即時預覽、KaTeX 數學公式以及透過 URL Hash 進行無伺服器分享。
+A lightweight, zero-build Markdown editor PWA. Your document lives entirely in the URL hash — no database, no accounts. Share the link and you share the document.
 
-## 🌟 特色功能
+## ✨ Features
 
-- **即時預覽**：採用 Web Worker 處理 Marked.js 解析，效能流暢。
-- **高壓縮比分享**：使用 LZ-String 壓縮文字並儲存於 URL Hash，無需資料庫。
-- **PWA 支援**：可安裝至手機或電腦，支援離線使用。
-- **數學公式**：內建 KaTeX 支援。
-- **分享**：複製完整連結，或透過 Web Share API 呼叫系統分享面板。
+- **Live split-view editing** — Markdown is parsed in a Web Worker (marked.js), with a debounced syntax-highlighting overlay on top of the editor; Markdown syntax, HTML tags, CSS blocks and LaTeX commands each get their own colors
+- **Serverless sharing** — content is compressed with LZ-String into the URL hash; copy the full URL or use the system share sheet (Web Share API). Damaged or truncated links are detected and reported instead of silently opening empty
+- **Isolated preview** — the preview renders inside a Shadow DOM, so `<style>` blocks in your document can style the preview without leaking into the editor or the rest of the UI
+- **Math typesetting** — KaTeX with the proper serif fonts, hoisted at document level with `font-display: swap`
+- **Three view modes** — split view (desktop default), editor-only and preview-only; one click cycles through them. On mobile, the initial view follows the content source: shared links open on the preview, drafts and empty documents on the editor
+- **Smart, undo-friendly editing** — list continuation, ordered-list renumbering, auto-indent inside code fences and `<style>/<script>` blocks, Tab indent; every edit goes through `execCommand` so the native undo stack (Ctrl+Z) is preserved, and Enter handling is IME-safe
+- **Draft autosave** — an unsaved draft is kept in localStorage and restored on your next visit
+- **Import / Export** — import via file picker or drag & drop; export via download, Ctrl+S, or Print to PDF
+- **Installable PWA** — offline-capable through a Service Worker with tolerant per-asset caching and stale-cache cleanup
+- **Dark mode** — automatic light/dark palettes for the UI, the editor and the preview (including print output)
+- **Lightweight by design** — plain HTML/CSS/JS, no build step, no node_modules
 
-## 🚀 如何使用
+## 🚀 Usage
 
-1. 透過 GitHub Pages 網址開啟（本機開發可開啟 `index.html`，但分享與 Service Worker 功能需 http/https 環境）。
-2. 在左側輸入 Markdown 語法，右側即時顯示結果。
-3. 點擊分享按鈕即可複製完整連結或透過系統分享。
+1. Open the GitHub Pages URL. (Opening `index.html` locally works for editing, but sharing and the Service Worker require an http/https origin.)
+2. Type Markdown on the left, see it rendered live on the right.
+3. Use the share menu to copy the full URL or open the system share sheet.
 
-## 📦 部署
+## 📁 Project structure
 
-- 部署採用 GitHub Actions workflow（`.github/workflows/deploy.yml`），推送至 `master` 即自動發佈。
-- 儲存庫設定需將 Pages 的 Build and deployment 來源設為 **GitHub Actions**。
+```
+├── index.html / manifest.json / sw.js   # entry point, PWA manifest, service worker
+├── js/file.js                           # application logic
+├── css/style.css                        # UI styles
+├── images/icons/                        # app icons
+├── tests/sample.md                      # full-feature test document
+├── tools/logo.html                      # SVG logo design & export tool
+└── docs/roadmap.md                      # development log, principles and backlog
+```
 
-## 🛠 技術棧
+## 📦 Deployment
 
-- 原生 JavaScript (ES6+)
-- [Marked.js](https://marked.js.org/) (Markdown 解析)
-- [LZ-String](https://pieroxy.net/lua/lz-string/) (資料壓縮)
-- [KaTeX](https://katex.org/) (數學公式)
+- Deploys through the GitHub Actions workflow (`.github/workflows/deploy.yml`) — pushing to `master` publishes automatically; changes under `docs/`, `tests/`, `tools/` or the README do not trigger a deploy
+- Repository settings: Pages → Build and deployment → Source must be set to **GitHub Actions**
+- Any change to frontend files (html/css/js) must bump `CACHE_NAME` in `sw.js` — the cache-first Service Worker will not refresh them otherwise (see principle 4 in `docs/roadmap.md`)
+
+## 🛠 Tech stack
+
+- Vanilla JavaScript (ES6+), no build step
+- [marked.js](https://marked.js.org/) + [marked-katex-extension](https://github.com/UziTech/marked-katex-extension) — Markdown parsing and math integration
+- [KaTeX](https://katex.org/) — math typesetting
+- [DOMPurify](https://github.com/cure53/DOMPurify) — output sanitization (WHOLE_DOCUMENT mode)
+- [LZ-String](https://pieroxy.net/lua/lz-string/) — URL-hash compression
+- Shadow DOM + constructable stylesheets — style isolation for the preview
