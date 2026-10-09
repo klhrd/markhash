@@ -109,6 +109,22 @@
 - `CACHE_NAME` bump 至 `v6.14.6`（原則 4）。
 - 縮網址服務的長度限制與 proxy 單點故障問題（見 v6.14.1 H-2）隨功能移除一併消失；完整連結分享回歸 MarkHash 的 hash 原生機制。
 
+---
+
+## v6.14.7（branch: `feat/ux-polish`）：編輯體驗修復 + Quick Wins（依使用者決策）
+
+| # | 項目 | 說明 | 狀態 |
+|---|------|------|------|
+| U-1 | Undo/redo 修復 | 新增 `applyEdit()`：`setSelectionRange` + `execCommand('insertText'/'delete')`（原生 undo 堆疊、原生 input），失敗退 `setRangeText`；改寫全部 5 個編輯點（Tab / raw-block Enter / 清單三分支），**同時修好有選取範圍時不刪除選取內容** | ✅ |
+| U-2 | highlightContent debounce 40ms | 原本每按鍵同步跑 15+ regex pass；Markdown 渲染本來就有 150ms debounce，高亮現在跟進 | ✅ |
+| U-3 | `codeContext()` 取代 `inRawBlock` | ```/~~~ 圍籬與 `<style>/<script>` 都走智慧縮排（圍籬內不再誤填清單符號，與高亮層一致）；行內 code 以等長空白消除（`` `<script>` `` 教學文字不誤觸發）；圍籬計數先於行內消除以保護 ``` 行首 | ✅ |
+| U-4 | UI 全英文 + 移除版本標籤（使用者決策） | worker toast、placeholder 英文化；`lang=en`；version-tag 元素與樣式移除；title/manifest/README 均為純 `MarkHash` | ✅ |
+| U-5 | Quick Wins | favicon、亮/暗 theme-color、icon 按鈕 aria-label、meta description + OG tags、暗色模式預覽 code block 覆寫（localSheet）、hash 解壓失敗 toast、safe-area-inset-bottom、Esc 關閉選單、清空時 URL 移除 `#` | ✅ |
+
+實作中發現與修正：`compressToEncodedURIComponent('')` 實際回傳 `'Q'`（並非空字串），且 LZString 對**無效輸入也可能回傳空字串**（非僅 null）——「損毀連結」偵渤改為**往返驗證**（`compress(decompress(h)) === h`，已驗證對空文件、CJK、長文皆確定性往返）；空內容判定改用 `len`/`text` 而非 hash 真值，清空後 URL 乾淨回到 pathname。
+
+- `CACHE_NAME` bump 至 `v6.14.7`（原則 4；版本顯示已移除，快取版本為內部維護用）。
+
 ## 未來待辦（Backlog，本次不處理）
 
 - 編輯器 `editor.value = ...` 直接賦值破壞原生 undo stack（Ctrl+Z 失效）→ 改用 `setRangeText` 或 `execCommand('insertText')`。

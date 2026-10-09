@@ -25,7 +25,7 @@ if (previewHost.attachShadow && window.CSSStyleSheet && CSSStyleSheet.prototype.
     preview.className = 'markdown-body';
     previewShadow.appendChild(preview);
     const localSheet = new CSSStyleSheet();
-    localSheet.replaceSync('.markdown-body{background:transparent!important;color:var(--text-primary)!important;line-height:1.8}.katex-display{background:transparent!important;color:inherit;padding:10px 0}::selection{background:var(--selection-bg)}');
+    localSheet.replaceSync('.markdown-body{background:transparent!important;color:var(--text-primary)!important;line-height:1.8}.katex-display{background:transparent!important;color:inherit;padding:10px 0}::selection{background:var(--selection-bg)}@media (prefers-color-scheme: dark){.markdown-body pre{background-color:#161b22;color:#e6edf3}.markdown-body pre code{background-color:transparent;color:inherit}.markdown-body code{background-color:rgba(110,118,129,0.4)}.markdown-body table tr{background-color:transparent}}');
     previewShadow.adoptedStyleSheets = [localSheet];
     Promise.all([
         fetch(CDN.katexCss).then((r) => r.text()),
@@ -67,8 +67,8 @@ const worker = new Worker(URL.createObjectURL(new Blob([workerScript], { type: '
 worker.onmessage = (e) => {
     const { html, hash, len } = e.data;
     preview.innerHTML = DOMPurify.sanitize(html, SANITIZE_OPTS);
-    // 空內容壓縮後為空字串，仍要更新 hash，否則清空後舊內容會殘留在 URL
-    try { history.replaceState(null, null, '#' + hash); } catch (err) {}
+    // 空內容時回到 pathname，避免 URL 留下 '#' + 空文件壓縮值（compress('') = 'Q'）
+    try { history.replaceState(null, null, len ? '#' + hash : location.pathname + location.search); } catch (err) {}
     updateStats(len);
 };
 
@@ -77,7 +77,8 @@ function renderOnMain() {
     const text = editor.value;
     try {
         preview.innerHTML = DOMPurify.sanitize(marked.parse(text), SANITIZE_OPTS);
-        try { history.replaceState(null, null, '#' + LZString.compressToEncodedURIComponent(text)); } catch (err) {}
+        const hash = LZString.compressToEncodedURIComponent(text);
+        try { history.replaceState(null, null, text ? '#' + hash : location.pathname + location.search); } catch (err) {}
         updateStats(text.length);
     } catch (err) {}
 }
@@ -132,6 +133,7 @@ function applyEdit(text, from, to) {
     }
     if (!ok) {
         editor.setRangeText(text, from, to, 'end');
+        editor.setSelectionRange(from + text.length, from + text.length);
         editor.dispatchEvent(new Event('input'));
     }
 }
@@ -276,6 +278,10 @@ document.addEventListener('click', () => {
     urlStats.classList.remove('active');
 });
 
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') document.querySelectorAll('.dropdown-menu.show').forEach(d => d.classList.remove('show'));
+});
+
 function toggleMobileView() {
     document.getElementById('editorPanel').classList.toggle('active');
     document.getElementById('previewPanel').classList.toggle('active');
@@ -313,8 +319,12 @@ function downloadFile() { const a = document.createElement('a'); a.href = URL.cr
 window.onload = () => {
     const h = window.location.hash.substring(1);
     if (h) {
+        // compress('') = 'Q'（合法空文件）；LZString 對無效輸入也可能回傳空字串而非 null，
+        // 故以往返驗證（compress(decompress(h)) === h）區分合法連結與損毀/截斷連結
         const d = LZString.decompressFromEncodedURIComponent(h);
-        if (d) { editor.value = d; highlightContent(); updateStats(d.length); triggerW(); }
+        if (d !== null && d !== undefined && LZString.compressToEncodedURIComponent(d) === h) {
+            editor.value = d; highlightContent(); updateStats(d.length); triggerW();
+        } else showToast('Link may be damaged or truncated');
     } else { highlightContent(); triggerW(); }
 
     // 行動版初始頁面：空白文件落在編輯頁，帶內容（分享連結）落在展示頁

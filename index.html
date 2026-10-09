@@ -7,11 +7,21 @@
     
     <!-- PWA Settings -->
     <link rel="manifest" href="./manifest.json">
+    <link rel="icon" type="image/png" sizes="192x192" href="./images/icons/icon-192.png">
     <link rel="apple-touch-icon" href="./images/icons/icon-192.png">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="MarkHash">
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#1f2937">
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#0f172a">
+
+    <!-- SEO / sharing -->
+    <meta name="description" content="Lightweight Markdown editor PWA. Content lives entirely in the URL hash — no database, share the link itself.">
+    <meta property="og:title" content="MarkHash">
+    <meta property="og:description" content="Lightweight Markdown PWA with live preview, KaTeX math and URL-hash sharing.">
+    <meta property="og:type" content="website">
+    <meta property="og:image" content="./images/icons/icon-1024.png">
 
     <!-- 核心工具與樣式（KaTeX / github-markdown CSS 已內化至 Shadow DOM，見 file.js） -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.4/purify.min.js"></script>
@@ -35,15 +45,15 @@
     </div>
 
     <div class="controls">
-        <div class="url-stats" id="urlStats" onclick="toggleStats(event)">
+        <div class="url-stats" id="urlStats" onclick="toggleStats(event)" role="button" tabindex="0" aria-label="Character count">
             <div class="dot" id="sizeDot"></div>
             <span id="sizeText">0 chars</span>
         </div>
-        <button class="icon-btn" onclick="toggleMobileView()">
+        <button class="icon-btn" onclick="toggleMobileView()" aria-label="Toggle preview">
             <span class="material-symbols-outlined" id="toggleIcon">visibility</span>
         </button>
         <div class="dropdown">
-            <button class="icon-btn" onclick="toggleMenu(event, 'fileMenu')"><span class="material-symbols-outlined">save</span></button>
+            <button class="icon-btn" onclick="toggleMenu(event, 'fileMenu')" aria-label="File menu"><span class="material-symbols-outlined">save</span></button>
             <div class="dropdown-menu" id="fileMenu">
                 <button class="dropdown-item" onclick="triggerUpload()">
                     <span class="material-symbols-outlined" style="font-size: 20px;">upload_file</span>
@@ -56,7 +66,7 @@
             </div>
         </div>
         <div class="dropdown">
-            <button class="icon-btn" onclick="toggleMenu(event, 'shareMenu')"><span class="material-symbols-outlined">share</span></button>
+            <button class="icon-btn" onclick="toggleMenu(event, 'shareMenu')" aria-label="Share menu"><span class="material-symbols-outlined">share</span></button>
             <div class="dropdown-menu" id="shareMenu">
                 <button class="dropdown-item" onclick="copyOriginalUrl()">
                     <span class="material-symbols-outlined" style="font-size: 20px;">link</span>

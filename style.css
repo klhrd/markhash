@@ -66,19 +66,19 @@ button.icon-btn:hover { background-color: var(--hover-bg); color: var(--text-pri
 
 .editor-container { position: relative; flex: 1; overflow: hidden; }
 #editor {
-    width: 100%; height: 100%; padding: 24px; font-family: 'Roboto Mono', monospace !important; 
+    width: 100%; height: 100%; padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom));
+    font-family: 'Roboto Mono', monospace !important;
     font-size: 15px; line-height: 1.6; border: none; outline: none; resize: none;
     background: transparent !important; color: transparent !important; caret-color: var(--text-primary);
     white-space: pre-wrap; word-wrap: break-word; z-index: 2; position: relative;
     scrollbar-gutter: stable; overflow-y: auto; overflow-x: hidden;
 }
 #editor-highlighting {
-    position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 24px;
+    position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom));
     font-family: 'Roboto Mono', monospace !important; font-size: 15px; line-height: 1.6;
     overflow-y: hidden; pointer-events: none; white-space: pre-wrap; word-wrap: break-word;
     color: var(--text-primary); z-index: 1; scrollbar-gutter: stable;
 }
-
 .h-heading { color: var(--h-heading); font-weight: bold; }
 .h-bold { color: var(--h-bold); font-weight: bold; }
 .h-italic { color: var(--h-italic); font-style: italic; }
@@ -97,7 +97,7 @@ button.icon-btn:hover { background-color: var(--hover-bg); color: var(--text-pri
 .h-string { color: var(--h-code); }
 .h-math-cmd { color: var(--h-math-cmd); }
 
-#preview-container { flex: 1; overflow-y: auto; padding: 32px 48px; }
+#preview-container { flex: 1; overflow-y: auto; padding: 32px 48px; padding-bottom: calc(32px + env(safe-area-inset-bottom)); }
 .markdown-body { background: transparent !important; color: var(--text-primary) !important; line-height: 1.8; }
 .katex-display { background: transparent !important; color: inherit; padding: 10px 0; }
 
@@ -120,4 +120,4 @@ button.icon-btn:hover { background-color: var(--hover-bg); color: var(--text-pri
 ::-webkit-scrollbar-thumb:hover { background: var(--text-secondary); }
 ::-webkit-scrollbar-corner { background: transparent; }
 
-@media (max-width: 768px) { #preview-container { padding: 24px; } .panel { display: none; } .panel.active { display: flex; } .url-stats span { font-size: 11px; } }
+@media (max-width: 768px) { #preview-container { padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom)); } .panel { display: none; } .panel.active { display: flex; } .url-stats span { font-size: 11px; } }
