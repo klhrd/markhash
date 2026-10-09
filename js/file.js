@@ -25,7 +25,7 @@ if (previewHost.attachShadow && window.CSSStyleSheet && CSSStyleSheet.prototype.
     preview.className = 'markdown-body';
     previewShadow.appendChild(preview);
     const localSheet = new CSSStyleSheet();
-    localSheet.replaceSync('.markdown-body{background:transparent!important;color:var(--text-primary)!important;line-height:1.8}.katex-display{background:transparent!important;color:inherit;padding:10px 0}::selection{background:var(--selection-bg)}@media (prefers-color-scheme: dark){.markdown-body pre{background-color:#161b22;color:#e6edf3}.markdown-body pre code{background-color:transparent;color:inherit}.markdown-body code{background-color:rgba(110,118,129,0.4)}.markdown-body table tr{background-color:transparent}}');
+    localSheet.replaceSync('.markdown-body{background:transparent!important;color:var(--text-primary)!important;line-height:1.8}.katex-display{background:transparent!important;color:inherit;padding:10px 0}::selection{background:var(--selection-bg)}@media (prefers-color-scheme: dark){.markdown-body pre{background-color:#161b22;color:#e6edf3}.markdown-body pre code{background-color:transparent;color:inherit}.markdown-body code{background-color:rgba(110,118,129,0.4)}.markdown-body table tr{background-color:transparent}.markdown-body blockquote{border-color:#444c56;color:#9198a1}.markdown-body table td,.markdown-body table th{border-color:#444c56}.markdown-body hr{background-color:#444c56}}@media print{.markdown-body{color:#111827!important;background:transparent!important}.markdown-body pre{background-color:#f6f8fa!important;color:#24292f!important}.markdown-body pre code{background-color:transparent!important;color:inherit!important}.markdown-body code{background-color:rgba(175,184,193,0.2)!important}.markdown-body a{color:#0969da!important}}');
     previewShadow.adoptedStyleSheets = [localSheet];
     Promise.all([
         fetch(CDN.katexCss).then((r) => r.text()),
@@ -37,7 +37,7 @@ if (previewHost.attachShadow && window.CSSStyleSheet && CSSStyleSheet.prototype.
         // @font-face 提升至 document 層：shadow tree 內 adopted stylesheet 宣告的字型
         // 在部分瀏覽器不會觸發載入，導致數學式 fallback 到系統字體；
         // font-family 為文件全域，於 document 宣告後 shadow 內可正常引用
-        const fontFaces = absKatex.match(/@font-face\s*\{[^}]*\}/g) || [];
+        const fontFaces = (absKatex.match(/@font-face\s*\{[^}]*\}/g) || []).map((f) => f.replace(/\}$/, '') + ';font-display:swap}');
         if (fontFaces.length) {
             const fontStyle = document.createElement('style');
             fontStyle.textContent = fontFaces.join('\n');
@@ -54,6 +54,12 @@ if (previewHost.attachShadow && window.CSSStyleSheet && CSSStyleSheet.prototype.
 // WHOLE_DOCUMENT: 讓 DOMPurify 一併消毒 <head>，否則文件開頭的 <style> 會被 HTML 解析器
 // 放進 <head> 而遭 fragment 模式靜默丟棄（內文中段的 <style> 則不受影響）
 const SANITIZE_OPTS = { USE_PROFILES: { html: true, mathMl: true, svg: true }, ADD_ATTR: ['mathvariant', 'display'], WHOLE_DOCUMENT: true };
+
+// 分享連結防護：僅在 <style> 區塊內剝除 @import（外部 CSS 是追蹤/偽造載入點），
+// 不動 code block 中的字面 @import 文字
+function stripCssImport(html) {
+    return html.replace(/<style[^>]*>[\s\S]*?<\/style>/gi, m => m.replace(/@import[^;}]*[;}]?/gi, ''));
+}
 
 const workerScript = `
     importScripts('${CDN.marked}',
@@ -76,20 +82,22 @@ const workerScript = `
 const worker = new Worker(URL.createObjectURL(new Blob([workerScript], { type: 'text/javascript' })));
 worker.onmessage = (e) => {
     const { html, hash, len } = e.data;
-    preview.innerHTML = DOMPurify.sanitize(html, SANITIZE_OPTS);
+    preview.innerHTML = stripCssImport(DOMPurify.sanitize(html, SANITIZE_OPTS));
     // 空內容時回到 pathname，避免 URL 留下 '#' + 空文件壓縮值（compress('') = 'Q'）
     try { history.replaceState(null, null, len ? '#' + hash : location.pathname + location.search); } catch (err) {}
-    updateStats(len);
+    const baseLen = location.href.length - location.hash.length;
+    updateStats(len, hash ? baseLen + 1 + hash.length : baseLen);
 };
 
 // Worker 容錯：CDN 載入失敗時降級為主執行緒同步渲染
 function renderOnMain() {
     const text = editor.value;
     try {
-        preview.innerHTML = DOMPurify.sanitize(marked.parse(text), SANITIZE_OPTS);
+        preview.innerHTML = stripCssImport(DOMPurify.sanitize(marked.parse(text), SANITIZE_OPTS));
         const hash = LZString.compressToEncodedURIComponent(text);
         try { history.replaceState(null, null, text ? '#' + hash : location.pathname + location.search); } catch (err) {}
-        updateStats(text.length);
+        const baseLen = location.href.length - location.hash.length;
+        updateStats(text.length, text ? baseLen + 1 + hash.length : baseLen);
     } catch (err) {}
 }
 
@@ -109,9 +117,12 @@ worker.onerror = () => {
         .catch(() => showToast('Fallback failed to load, check your network'));
 };
 
-function updateStats(len) {
-    sizeText.innerText = len + ' chars';
-    sizeDot.style.backgroundColor = len <= 2000 ? 'var(--success-color)' : (len <= 8000 ? 'var(--warning-color)' : 'var(--danger-color)');
+// 字數統計：dot 依「分享 URL 長度」上色（通訊軟體截斷風險），點擊可展開 URL 與原始字數
+let lastUrlLen = location.href.length;
+function updateStats(len, urlLen) {
+    if (urlLen === undefined) urlLen = lastUrlLen; else lastUrlLen = urlLen;
+    sizeText.innerText = urlLen + ' URL · ' + len + ' chars';
+    sizeDot.style.backgroundColor = urlLen <= 2000 ? 'var(--success-color)' : (urlLen <= 8000 ? 'var(--warning-color)' : 'var(--danger-color)');
 }
 
 function toggleStats(e) { e.stopPropagation(); urlStats.classList.toggle('active'); }
@@ -276,9 +287,10 @@ function highlightContent() {
 
 const debounce = (f, w) => { let t; return (...a) => { clearTimeout(t); t = setTimeout(() => f(...a), w); }; };
 const triggerH = debounce(highlightContent, 40);
+const triggerDraft = debounce(() => { try { localStorage.setItem('markhash-draft', editor.value); } catch (e) {} }, 300);
 let triggerW = debounce(() => worker.postMessage({ text: editor.value }), 150);
 
-editor.addEventListener('input', () => { updateStats(editor.value.length); triggerH(); triggerW(); });
+editor.addEventListener('input', () => { updateStats(editor.value.length); triggerH(); triggerW(); triggerDraft(); });
 editor.addEventListener('scroll', () => { editorHighlighting.scrollTop = editor.scrollTop; });
 
 function toggleMenu(e, id) { e.stopPropagation(); const m = document.getElementById(id); const s = m.classList.contains('show'); document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('show')); if (!s) m.classList.add('show'); }
@@ -290,6 +302,7 @@ document.addEventListener('click', () => {
 
 document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') document.querySelectorAll('.dropdown-menu.show').forEach(d => d.classList.remove('show'));
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 's') { e.preventDefault(); downloadFile(); }
 });
 
 function toggleMobileView() {
@@ -317,13 +330,18 @@ async function shareUrl() {
     }
 }
 
-function triggerUpload() { document.getElementById('fileInput').click(); }
-document.getElementById('fileInput').onchange = (e) => {
+function readFileInto(file) {
     const r = new FileReader();
-    if (!e.target.files[0]) return;
     r.onload = (ev) => { editor.value = ev.target.result; editor.dispatchEvent(new Event('input')); };
-    r.readAsText(e.target.files[0]);
-};
+    r.readAsText(file);
+}
+function triggerUpload() { document.getElementById('fileInput').click(); }
+document.getElementById('fileInput').onchange = (e) => { if (e.target.files[0]) readFileInto(e.target.files[0]); };
+['dragover', 'drop'].forEach((ev) => document.addEventListener(ev, (e) => e.preventDefault()));
+document.addEventListener('drop', (e) => {
+    const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+    if (file && /\.(md|txt|markdown)$/i.test(file.name)) readFileInto(file);
+});
 function downloadFile() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([editor.value], {type: 'text/markdown'})); a.download = 'markhash.md'; a.click(); }
 
 window.onload = () => {
@@ -335,7 +353,14 @@ window.onload = () => {
         if (d !== null && d !== undefined && LZString.compressToEncodedURIComponent(d) === h) {
             editor.value = d; highlightContent(); updateStats(d.length); triggerW();
         } else showToast('Link may be damaged or truncated');
-    } else { highlightContent(); triggerW(); }
+    } else {
+        // 無 hash 時還原本機草稿（有效連結優先，損毀連結不被草稿覆蓋）
+        try {
+            const draft = localStorage.getItem('markhash-draft');
+            if (draft) { editor.value = draft; showToast('Draft restored'); }
+        } catch (e) {}
+        highlightContent(); updateStats(editor.value.length); triggerW();
+    }
 
     // 行動版初始頁面：空白文件落在編輯頁，帶內容（分享連結）落在展示頁
     if (window.innerWidth <= 768) {

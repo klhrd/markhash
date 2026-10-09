@@ -1,4 +1,4 @@
-const CACHE_NAME = 'markhash-v6.14.9';
+const CACHE_NAME = 'markhash-v6.14.10';
 const ASSETS = [
   './',
   './index.html',
@@ -8,7 +8,7 @@ const ASSETS = [
   './images/icons/icon-192.png',
   './images/icons/icon-512.png',
   'https://cdn.jsdelivr.net/npm/marked@12.0.2/marked.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.2.4/purify.min.js',
+  'https://cdnjs.cloudflare.com/ajax/libs/dompurify/3.4.16/purify.min.js',
   'https://cdnjs.cloudflare.com/ajax/libs/lz-string/1.4.4/lz-string.min.js',
   'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css',
   'https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js',

@@ -114,6 +114,15 @@ button.icon-btn:hover { background-color: var(--hover-bg); color: var(--text-pri
 /* 選取反白：半透明主題色調，語法色彩可透過選取範圍顯現（編輯器文字為透明色） */
 ::selection { background: var(--selection-bg); }
 
+/* 列印/匯出 PDF：只印預覽區（預覽在 shadow 內，其文字顏色由 localSheet 的 print 覆寫處理） */
+@media print {
+    header, #editorPanel, #toast { display: none !important; }
+    body { height: auto !important; overflow: visible !important; background: #fff !important; }
+    .container { display: block !important; overflow: visible !important; }
+    #previewPanel { display: flex !important; }
+    #preview-container { padding: 0 !important; overflow: visible !important; }
+}
+
 ::-webkit-scrollbar { width: 10px; height: 10px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: var(--border-color); border: 2px solid transparent; border-radius: 10px; background-clip: content-box; }

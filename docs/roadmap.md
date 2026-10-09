@@ -149,6 +149,29 @@
 - `CACHE_NAME` bump 至 `v6.14.9`（原則 4）。
 - 離線字型快取（KaTeX woff2 進 SW ASSETS，約 20 檔）仍在 backlog，與輕量化原則取捨。
 
+---
+
+## v6.14.10（branch: `feat/polish-batch`）：強化與打磨批次
+
+| # | 項目 | 說明 | 狀態 |
+|---|------|------|------|
+| PB-1 | DOMPurify 3.2.4 → 3.4.16 | 含 3.3/3.4 安全性修補；index.html 與 sw.js ASSETS 同步，消毒回歸通過 | ✅ |
+| PB-2 | Print / 匯出 PDF | File 選單加 Print；文件層 `@media print` 只印預覽區；**localSheet 補 print 顏色覆寫**——預覽在 shadow 內吃不到文件層 print CSS，且暗色 OS 列印會白底白字，於 shadow sheet 內強制黑字 | ✅ |
+| PB-3 | @import 硬化 | `stripCssImport()` 僅在 `<style>` 區塊內剝除 `@import`（外部 CSS 追蹤/偽造面），不影響 code block 字面文字 | ✅ |
+| PB-4 | Stats 語意更新 | dot 依**分享 URL 長度**上色（≤2000 綠 / ≤8000 黃 / 紅），點擊展開 `N URL · M chars` 雙值 | ✅ |
+| PB-5 | Drag & drop 匯入 | 拖 .md/.txt/.markdown 進視窗即載入（與 Import 共用 `readFileInto`） | ✅ |
+| PB-6 | Ctrl+S / Cmd+S = Export | 併入既有 document keydown listener | ✅ |
+| PB-7 | localStorage 草稿 | input 時 300ms debounce 存 `markhash-draft`；開啟時無 hash 則還原 + toast（有效連結優先、損毀連結不被覆蓋） | ✅ |
+| PB-8 | 暗色模式細節 | localSheet dark 區塊補 blockquote/table/hr 邊框對比 | ✅ |
+| PB-9 | manifest polish | `id: "./"`、icons 補 `purpose: "any maskable"`（screenshots 需實圖，維持 backlog） | ✅ |
+| PB-10 | KaTeX 字型 FOUT | 提升至 document 的 @font-face 補 `font-display: swap` | ✅ |
+
+註記：
+- 使用者文件內自訂的 `@font-face` 宣告在 shadow 內，與 v6.14.9 修復的 KaTeX 有相同的瀏覽器載入限制——極少使用，先記錄不處理。
+- `codeContext` 將 4 空格縮排的 ``` 視為 fence（規範上是縮排程式碼塊）——行為同為智慧縮排，無害偏差。
+- 離線字型（KaTeX woff2 進 SW）依決策**不納入**，維持輕量化。
+- `CACHE_NAME` bump 至 `v6.14.10`（原則 4）。
+
 ## 未來待辦（Backlog，本次不處理）
 
 - 編輯器 `editor.value = ...` 直接賦值破壞原生 undo stack（Ctrl+Z 失效）→ 改用 `setRangeText` 或 `execCommand('insertText')`。
