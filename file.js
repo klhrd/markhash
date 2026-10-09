@@ -193,14 +193,19 @@ async function shortenUrl(service = 'isgd') {
     if (!/^https?:$/.test(location.protocol)) { showToast('此功能需透過網頁伺服器（GitHub Pages）開啟'); return; }
     showToast("產出中...");
     try {
-        let apiUrl = (service === 'isgd') ? `https://is.gd/create.php?format=json&url=${encodeURIComponent(window.location.href)}` : `https://tinyurl.com/api-create.php?url=${encodeURIComponent(window.location.href)}`;
-        const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(apiUrl)}`);
-        if (!r.ok) throw new Error('proxy error');
-        const d = await r.json();
+        const shareUrl = encodeURIComponent(window.location.href);
         let shortUrl = '';
         if (service === 'isgd') {
-            try { shortUrl = JSON.parse(d.contents).shorturl || ''; } catch (err) { shortUrl = ''; }
+            // is.gd 原生支援 CORS（ACAO: *），直接呼叫可避開 proxy 單點故障
+            const r = await fetch(`https://is.gd/create.php?format=json&url=${shareUrl}`);
+            if (!r.ok) throw new Error('isgd error');
+            const d = await r.json();
+            shortUrl = d.shorturl || '';
         } else {
+            // tinyurl 無開放 CORS，仍需透過 proxy
+            const r = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://tinyurl.com/api-create.php?url=' + shareUrl)}`);
+            if (!r.ok) throw new Error('proxy error');
+            const d = await r.json();
             shortUrl = (d.contents || '').trim();
         }
         if (shortUrl && shortUrl.startsWith('http')) copyToClipboard(shortUrl);

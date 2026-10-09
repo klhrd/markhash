@@ -1,4 +1,4 @@
-const CACHE_NAME = 'markhash-v6.14';
+const CACHE_NAME = 'markhash-v6.14.1';
 const ASSETS = [
   './',
   './index.html',
@@ -42,8 +42,11 @@ self.addEventListener('fetch', (event) => {
     caches.match(event.request).then((cached) => {
       if (cached) return cached;
       return fetch(event.request).catch(() =>
-        // 離線時導頁請求 fallback 到首頁（hash 內容不會丟失）
-        event.request.mode === 'navigate' ? caches.match('./index.html') : undefined
+        // 離線時導頁請求 fallback 到首頁（hash 內容不會丟失）；
+        // 其餘請求一律回傳 Response.error()，避免 respondWith 收到 undefined
+        event.request.mode === 'navigate'
+          ? caches.match('./index.html').then((r) => r || Response.error())
+          : Response.error()
       );
     })
   );
