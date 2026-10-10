@@ -79,10 +79,17 @@ const workerScript = `
     };
 `;
 
+// 渲染入口：消毒 + 剝除 @import 後，預覽內所有連結改於新分頁開啟
+// （避免點擊預覽連結把整份文件導走；noopener 防反向引用）
+function renderPreview(html) {
+    preview.innerHTML = stripCssImport(DOMPurify.sanitize(html, SANITIZE_OPTS));
+    preview.querySelectorAll('a').forEach((a) => { a.target = '_blank'; a.rel = 'noopener noreferrer'; });
+}
+
 const worker = new Worker(URL.createObjectURL(new Blob([workerScript], { type: 'text/javascript' })));
 worker.onmessage = (e) => {
     const { html, hash, len } = e.data;
-    preview.innerHTML = stripCssImport(DOMPurify.sanitize(html, SANITIZE_OPTS));
+    renderPreview(html);
     // 空內容時回到 pathname，避免 URL 留下 '#' + 空文件壓縮值（compress('') = 'Q'）
     try { history.replaceState(null, null, len ? '#' + hash : location.pathname + location.search); } catch (err) {}
     const baseLen = location.href.length - location.hash.length;
@@ -93,7 +100,7 @@ worker.onmessage = (e) => {
 function renderOnMain() {
     const text = editor.value;
     try {
-        preview.innerHTML = stripCssImport(DOMPurify.sanitize(marked.parse(text), SANITIZE_OPTS));
+        renderPreview(marked.parse(text));
         const hash = LZString.compressToEncodedURIComponent(text);
         try { history.replaceState(null, null, text ? '#' + hash : location.pathname + location.search); } catch (err) {}
         const baseLen = location.href.length - location.hash.length;
@@ -126,6 +133,8 @@ function updateStats(len, urlLen) {
 }
 
 function toggleStats(e) { e.stopPropagation(); urlStats.classList.toggle('active'); }
+// urlStats 有 role="button" tabindex="0"——補鍵盤啟用（Enter / Space）
+urlStats.addEventListener('keydown', (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleStats(e); } });
 
 // 游標的程式碼情境：'fence' = ```/~~~ 圍籬內、'raw' = <style>/<script> 未閉合、'text' = 一般 Markdown
 // 行內 code 以等長空白消除，避免 `` `<script>` `` 之類教學文字誤判（圍籬計數先於消除，保護 ``` 開頭）
@@ -365,7 +374,12 @@ document.addEventListener('drop', (e) => {
     const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
     if (file && /\.(md|txt|markdown)$/i.test(file.name)) readFileInto(file);
 });
-function downloadFile() { const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([editor.value], {type: 'text/markdown'})); a.download = 'markhash.md'; a.click(); }
+function downloadFile() {
+    const blobUrl = URL.createObjectURL(new Blob([editor.value], { type: 'text/markdown' }));
+    const a = document.createElement('a');
+    a.href = blobUrl; a.download = 'markhash.md'; a.click();
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
+}
 
 // ---- 啟動（script 於 body 末端同步執行：內容載入 + 初始檢視模式，避免行動版面板閃爍）----
 (() => {

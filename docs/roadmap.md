@@ -228,6 +228,20 @@
 
 - `CACHE_NAME` bump 至 `v6.14.15`（原則 4）。
 
+---
+
+## v6.14.16（branch: `fix/polish-round2`）：第二輪分析修復
+
+| # | 項目 | 說明 | 狀態 |
+|---|------|------|------|
+| R2-1 | 預覽連結改新分頁開啟 | marked 產出的 `<a>` 原本無 `target`——點擊預覽內連結會整頁導走、離開文件。兩條渲染路徑統一走 `renderPreview()`，渲染後為 shadow 內所有連結補 `target="_blank" rel="noopener noreferrer"` | ✅ |
+| R2-2 | iOS standalone 狀態列避讓 | header 原為固定 `height: 50px` 且只有左右 safe-area padding——PWA 安裝後（viewport-fit=cover）狀態列會蓋住工具列。改 `min-height: 50px` + `padding-top: env(safe-area-inset-top)`，桌機與瀏覽器分頁不受影響（env 為 0） | ✅ |
+| R2-3 | urlStats 鍵盤啟用 | 補齊 `role="button" tabindex="0"` 的承諾：Enter / Space 觸發 toggleStats | ✅ |
+| R2-4 | downloadFile revoke | `createObjectURL` 的 URL 於下載啟動後 5 秒 revoke（backlog 常客） | ✅ |
+
+- 本輪評估後暫緩：列印閱讀寬度（`.markdown-body` print max-width）——使用者決策省略。
+- `CACHE_NAME` bump 至 `v6.14.16`（原則 4）。
+
 ## 未來待辦（Backlog，本次不處理）
 
 - 編輯器 `editor.value = ...` 直接賦值破壞原生 undo stack（Ctrl+Z 失效）→ 改用 `setRangeText` 或 `execCommand('insertText')`。
