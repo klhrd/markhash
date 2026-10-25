@@ -179,7 +179,46 @@ editor.addEventListener('keydown', (e) => {
 
     if (e.key === 'Tab') {
         e.preventDefault();
-        applyEdit('    ', start, end);
+        // 選取範圍涵蓋的行（無選取時 = 游標所在行）
+        const ls = value.lastIndexOf('\n', start - 1) + 1;
+        const lastChar = Math.max(end - 1, start);
+        const nl = value.indexOf('\n', lastChar);
+        const le = nl === -1 ? value.length : nl;
+        const lines = value.substring(ls, le).split('\n');
+
+        if (e.shiftKey) {
+            // Shift+Tab：每行行首移除至多 4 個空白（空格或 tab 字元），無可移除則不動（不產生 undo）
+            const outdented = lines.map((l) => l.replace(/^[ \t]{1,4}/, ''));
+            if (outdented.some((l, i) => l !== lines[i])) {
+                applyEdit(outdented.join('\n'), ls, le);
+                // 依各行移除量平移游標/選取位置（落在被移除空白內則收到行首）
+                const removed = lines.map((l, i) => l.length - outdented[i].length);
+                const pos = (p) => {
+                    const before = value.substring(ls, p).split('\n');
+                    const lineIdx = before.length - 1;
+                    let np = ls;
+                    for (let i = 0; i < lineIdx; i++) np += outdented[i].length + 1;
+                    return np + Math.max(0, before[lineIdx].length - (removed[lineIdx] || 0));
+                };
+                editor.setSelectionRange(pos(start), pos(end));
+            }
+        } else if (start !== end && lines.length > 1) {
+            // Tab + 多行選取：每行行首縮排 4 空白，保留選取範圍
+            // （位置在行首者縮排後仍停在新行首——整行選取維持整行）
+            applyEdit(lines.map((l) => '    ' + l).join('\n'), ls, le);
+            const lineStarts = [];
+            let s0 = ls;
+            for (const l of lines) { lineStarts.push(s0); s0 += l.length + 1; }
+            const shift = (p) => {
+                let d = 0;
+                for (const s of lineStarts) { if (s < p) d += 4; }
+                return p + d;
+            };
+            editor.setSelectionRange(shift(start), shift(end));
+        } else {
+            // 單游標或同行選取：插入 4 空白（取代選取內容）
+            applyEdit('    ', start, end);
+        }
     }
 
     if (e.key === 'Enter') {

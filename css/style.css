@@ -73,13 +73,13 @@ button.icon-btn:hover { background-color: var(--hover-bg); color: var(--text-pri
     font-size: 15px; line-height: 1.6; border: none; outline: none; resize: none;
     background: transparent !important; color: transparent !important; caret-color: var(--text-primary);
     white-space: pre-wrap; word-wrap: break-word; z-index: 2; position: relative;
-    scrollbar-gutter: stable; overflow-y: auto; overflow-x: hidden;
+    scrollbar-gutter: stable; overflow-y: auto; overflow-x: hidden; tab-size: 4;
 }
 #editor-highlighting {
     position: absolute; top: 0; left: 0; width: 100%; height: 100%; padding: 24px; padding-bottom: calc(24px + env(safe-area-inset-bottom));
     font-family: 'Roboto Mono', monospace !important; font-size: 15px; line-height: 1.6;
     overflow-y: hidden; pointer-events: none; white-space: pre-wrap; word-wrap: break-word;
-    color: var(--text-primary); z-index: 1; scrollbar-gutter: stable;
+    color: var(--text-primary); z-index: 1; scrollbar-gutter: stable; tab-size: 4;
 }
 .h-heading { color: var(--h-heading); font-weight: bold; }
 .h-bold { color: var(--h-bold); font-weight: bold; }

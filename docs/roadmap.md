@@ -242,6 +242,20 @@
 - 本輪評估後暫緩：列印閱讀寬度（`.markdown-body` print max-width）——使用者決策省略。
 - `CACHE_NAME` bump 至 `v6.14.16`（原則 4）。
 
+---
+
+## v6.14.17（branch: `feat/block-indent`）：多行縮排 / 反縮排
+
+| # | 項目 | 說明 | 狀態 |
+|---|------|------|------|
+| BI-1 | Tab + 多行選取 | 涵蓋的每一行行首縮排 4 空白，整段為單一 `applyEdit`（單一 undo 步），選取範圍依跨越行數平移保留 | ✅ |
+| BI-2 | Shift+Tab 反縮排 | 涵蓋行（含匯入檔的實體 tab 字元）行首移除至多 4 個空白；游標/選取位置依各行移除量修正（落在被移除空白內則收到行首）；無可移除時完全不做（不產生 undo 條目） | ✅ |
+| BI-3 | `tab-size: 4` | textarea 與高亮疊層同步設定——匯入含 `\t` 的檔案時兩層渲染一致且符合縮排慣例 | ✅ |
+
+架構結論（不實作）：**折行續行的視覺縮排（hanging indent）在 textarea 疊層架構下不可行**——疊層可以畫出縮排的續行，但 textarea 的游標/點擊幾何仍在 x=0，將造成每個折行的游標錯位（同 v6.14.12 引言問題的通例）。可行替代：改用 contenteditable 或 Monaco（重寫，違反輕量化）、或關閉 word-wrap 改橫向捲動（UX 大變）。經評估維持現狀。
+
+- `CACHE_NAME` bump 至 `v6.14.17`（原則 4）。
+
 ## 未來待辦（Backlog，本次不處理）
 
 - 編輯器 `editor.value = ...` 直接賦值破壞原生 undo stack（Ctrl+Z 失效）→ 改用 `setRangeText` 或 `execCommand('insertText')`。
