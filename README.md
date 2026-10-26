@@ -6,10 +6,10 @@ A lightweight, zero-build Markdown editor PWA. Your document lives entirely in t
 
 - **Live split-view editing** — Markdown is parsed in a Web Worker (marked.js), with a debounced syntax-highlighting overlay on top of the editor; Markdown syntax, HTML tags, CSS blocks and LaTeX commands each get their own colors
 - **Serverless sharing** — content is compressed with LZ-String into the URL hash; copy the full URL or use the system share sheet (Web Share API). Damaged or truncated links are detected and reported instead of silently opening empty
-- **Isolated preview** — the preview renders inside a Shadow DOM, so `<style>` blocks in your document can style the preview without leaking into the editor or the rest of the UI
+- **Isolated preview** — the preview renders inside a Shadow DOM, so `<style>` blocks in your document can style the preview without leaking into the editor or the rest of the UI; code blocks come with hover copy buttons (always visible on touch devices, hidden in print)
 - **Math typesetting** — KaTeX with the proper serif fonts, hoisted at document level with `font-display: swap`
 - **Three view modes** — split view (desktop default), editor-only and preview-only; one click cycles through them. On mobile, the initial view follows the content source: shared links open on the preview, drafts and empty documents on the editor
-- **Smart, undo-friendly editing** — list continuation, ordered-list renumbering, auto-indent inside code fences and `<style>/<script>` blocks, Tab indent; every edit goes through `execCommand` so the native undo stack (Ctrl+Z) is preserved, and Enter handling is IME-safe
+- **Smart, undo-friendly editing** — list continuation, ordered-list renumbering, auto-indent inside code fences and `<style>/<script>` blocks, block indent/outdent (Tab / Shift+Tab over selections), Markdown shortcuts (Ctrl+B / Ctrl+I / Ctrl+K), smart URL pasting (paste a link over selected text to make `[text](url)`); every edit goes through `execCommand` so the native undo stack (Ctrl+Z) is preserved, and Enter handling is IME-safe
 - **Draft autosave** — an unsaved draft is kept in localStorage and restored on your next visit
 - **Import / Export** — import via file picker or drag & drop; export via download, Ctrl+S, or Print to PDF
 - **Installable PWA** — offline-capable through a Service Worker with tolerant per-asset caching and stale-cache cleanup

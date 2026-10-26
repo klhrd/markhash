@@ -25,7 +25,7 @@ if (previewHost.attachShadow && window.CSSStyleSheet && CSSStyleSheet.prototype.
     preview.className = 'markdown-body';
     previewShadow.appendChild(preview);
     const localSheet = new CSSStyleSheet();
-    localSheet.replaceSync('.markdown-body{background:transparent!important;color:var(--text-primary)!important;line-height:1.8}.katex-display{background:transparent!important;color:inherit;padding:10px 0}::selection{background:var(--selection-bg)}@media (prefers-color-scheme: dark){.markdown-body pre{background-color:#161b22;color:#e6edf3}.markdown-body pre code{background-color:transparent;color:inherit}.markdown-body code{background-color:rgba(110,118,129,0.4)}.markdown-body table tr{background-color:transparent}.markdown-body blockquote{border-color:#444c56;color:#9198a1}.markdown-body table td,.markdown-body table th{border-color:#444c56}.markdown-body hr{background-color:#444c56}}@media print{.markdown-body{color:#111827!important;background:transparent!important}.markdown-body pre{background-color:#f6f8fa!important;color:#24292f!important}.markdown-body pre code{background-color:transparent!important;color:inherit!important}.markdown-body code{background-color:rgba(175,184,193,0.2)!important}.markdown-body a{color:#0969da!important}}');
+    localSheet.replaceSync('.markdown-body{background:transparent!important;color:var(--text-primary)!important;line-height:1.8}.katex-display{background:transparent!important;color:inherit;padding:10px 0}::selection{background:var(--selection-bg)}.markdown-body pre{position:relative}.code-copy{position:absolute;top:8px;right:8px;border:1px solid var(--border-color);background:var(--bg-paper);color:var(--text-primary);font-family:inherit;font-size:12px;line-height:1;padding:4px 10px;border-radius:6px;cursor:pointer;opacity:0;transition:opacity 0.2s}.code-copy:hover{background:var(--hover-bg)}pre:hover .code-copy,.code-copy:focus-visible{opacity:1}@media (hover:none){.code-copy{opacity:0.8}}@media (prefers-color-scheme: dark){.markdown-body pre{background-color:#161b22;color:#e6edf3}.markdown-body pre code{background-color:transparent;color:inherit}.markdown-body code{background-color:rgba(110,118,129,0.4)}.markdown-body table tr{background-color:transparent}.markdown-body blockquote{border-color:#444c56;color:#9198a1}.markdown-body table td,.markdown-body table th{border-color:#444c56}.markdown-body hr{background-color:#444c56}}@media print{.markdown-body{color:#111827!important;background:transparent!important}.markdown-body pre{background-color:#f6f8fa!important;color:#24292f!important}.markdown-body pre code{background-color:transparent!important;color:inherit!important}.markdown-body code{background-color:rgba(175,184,193,0.2)!important}.markdown-body a{color:#0969da!important}.code-copy{display:none!important}}');
     previewShadow.adoptedStyleSheets = [localSheet];
     Promise.all([
         fetch(CDN.katexCss).then((r) => r.text()),
@@ -79,11 +79,21 @@ const workerScript = `
     };
 `;
 
-// 渲染入口：消毒 + 剝除 @import 後，預覽內所有連結改於新分頁開啟
-// （避免點擊預覽連結把整份文件導走；noopener 防反向引用）
+// 渲染入口：消毒 + 剝除 @import 後，預覽內所有連結改於新分頁開啟，
+// 程式碼區塊掛上 copy 按鈕（懸停顯示；觸控裝置常駐；列印隱藏）
 function renderPreview(html) {
     preview.innerHTML = stripCssImport(DOMPurify.sanitize(html, SANITIZE_OPTS));
     preview.querySelectorAll('a').forEach((a) => { a.target = '_blank'; a.rel = 'noopener noreferrer'; });
+    preview.querySelectorAll('pre').forEach((pre) => {
+        const code = (pre.querySelector('code') || pre).textContent;
+        const btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'code-copy';
+        btn.setAttribute('aria-label', 'Copy code');
+        btn.textContent = 'copy';
+        btn.addEventListener('click', () => copyToClipboard(code));
+        pre.appendChild(btn);
+    });
 }
 
 const worker = new Worker(URL.createObjectURL(new Blob([workerScript], { type: 'text/javascript' })));
@@ -176,6 +186,36 @@ editor.addEventListener('keydown', (e) => {
     const start = editor.selectionStart;
     const end = editor.selectionEnd;
     const value = editor.value;
+
+    // Markdown 快捷鍵：Ctrl/Cmd+B 粗體、Ctrl/Cmd+I 斜體、Ctrl/Cmd+K 連結
+    if ((e.ctrlKey || e.metaKey) && !e.shiftKey && !e.altKey) {
+        const key = e.key.toLowerCase();
+        if (key === 'b' || key === 'i') {
+            e.preventDefault();
+            const wrap = key === 'b' ? '**' : '*';
+            if (start !== end) {
+                const inner = value.substring(start, end);
+                applyEdit(wrap + inner + wrap, start, end);
+                editor.setSelectionRange(start + wrap.length, end + wrap.length);
+            } else {
+                applyEdit(wrap + wrap, start, start);
+                editor.setSelectionRange(start + wrap.length, start + wrap.length);
+            }
+            return;
+        }
+        if (key === 'k') {
+            e.preventDefault();
+            if (start !== end) {
+                const inner = value.substring(start, end);
+                applyEdit('[' + inner + '](url)', start, end);
+                editor.setSelectionRange(start + inner.length + 3, start + inner.length + 6);
+            } else {
+                applyEdit('[](url)', start, start);
+                editor.setSelectionRange(start + 3, start + 6);
+            }
+            return;
+        }
+    }
 
     if (e.key === 'Tab') {
         e.preventDefault();
@@ -341,6 +381,16 @@ let triggerW = debounce(() => worker.postMessage({ text: editor.value }), 150);
 editor.addEventListener('input', () => { updateStats(editor.value.length); triggerH(); triggerW(); triggerDraft(); });
 editor.addEventListener('scroll', () => { editorHighlighting.scrollTop = editor.scrollTop; });
 
+// 智慧貼上：有選取文字時貼上 http(s) 連結，自動組成 [選取](URL)
+editor.addEventListener('paste', (e) => {
+    const text = (e.clipboardData || window.clipboardData).getData('text/plain');
+    if (!text || !/^https?:\/\//i.test(text.trim())) return;
+    const s = editor.selectionStart, en = editor.selectionEnd;
+    if (s === en || /[\n\r]/.test(editor.value.substring(s, en))) return;
+    e.preventDefault();
+    applyEdit('[' + editor.value.substring(s, en) + '](' + text.trim() + ')', s, en);
+});
+
 function toggleMenu(e, id) { e.stopPropagation(); const m = document.getElementById(id); const s = m.classList.contains('show'); document.querySelectorAll('.dropdown-menu').forEach(d => d.classList.remove('show')); if (!s) m.classList.add('show'); }
 
 document.addEventListener('click', () => {
@@ -403,20 +453,30 @@ async function shareUrl() {
 
 function readFileInto(file) {
     const r = new FileReader();
-    r.onload = (ev) => { editor.value = ev.target.result; editor.dispatchEvent(new Event('input')); };
+    r.onload = (ev) => { editor.value = ev.target.result; editor.dispatchEvent(new Event('input')); showToast('Imported ' + file.name); };
     r.readAsText(file);
 }
 function triggerUpload() { document.getElementById('fileInput').click(); }
 document.getElementById('fileInput').onchange = (e) => { if (e.target.files[0]) readFileInto(e.target.files[0]); };
-['dragover', 'drop'].forEach((ev) => document.addEventListener(ev, (e) => e.preventDefault()));
+// 拖放匯入：懸停高亮提示、放開即載入
+document.addEventListener('dragover', (e) => { e.preventDefault(); document.body.classList.add('drag-over'); });
+document.addEventListener('dragleave', (e) => { if (!e.relatedTarget) document.body.classList.remove('drag-over'); });
 document.addEventListener('drop', (e) => {
+    e.preventDefault();
+    document.body.classList.remove('drag-over');
     const file = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
     if (file && /\.(md|txt|markdown)$/i.test(file.name)) readFileInto(file);
 });
+// 匯出檔名取自第一個 # 標題（清理非法字元），fallback markhash
+function exportFileName() {
+    const m = editor.value.match(/^[ \t]{0,3}#{1,6}[ \t]+(.+?)[ \t]*$/m);
+    const name = m ? m[1].replace(/[\\/:*?"<>|#]+/g, ' ').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '') : '';
+    return (name || 'markhash').substring(0, 60);
+}
 function downloadFile() {
     const blobUrl = URL.createObjectURL(new Blob([editor.value], { type: 'text/markdown' }));
     const a = document.createElement('a');
-    a.href = blobUrl; a.download = 'markhash.md'; a.click();
+    a.href = blobUrl; a.download = exportFileName() + '.md'; a.click();
     setTimeout(() => URL.revokeObjectURL(blobUrl), 5000);
 }
 

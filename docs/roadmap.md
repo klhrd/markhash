@@ -256,6 +256,20 @@
 
 - `CACHE_NAME` bump 至 `v6.14.17`（原則 4）。
 
+---
+
+## v6.14.18（branch: `feat/ux-shortcuts`）：編輯與預覽體驗小改動批次
+
+| # | 項目 | 說明 | 狀態 |
+|---|------|------|------|
+| UX-1 | Markdown 快捷鍵 | Ctrl/Cmd+B 粗體、Ctrl/Cmd+I 斜體（包選取並保持選取）、Ctrl/Cmd+K 連結（`[text](url)` 並預選 url 佔位供直接貼上）；全部走 `applyEdit`（單一 undo 步） | ✅ |
+| UX-2 | 智慧貼上 | 有選取文字時貼上 http(s) 連結自動組成 `[選取](URL)`；選取含換行或非連結內容照常貼上 | ✅ |
+| UX-3 | 預覽程式碼區塊 copy 按鈕 | `renderPreview()` 對每個 `pre` 掛按鈕（複製 `code` 文字），hover 顯示、`@media (hover:none)` 觸控常駐 0.8、列印隱藏；樣式走 localSheet（主題變數自動跟隨） | ✅ |
+| UX-4 | 匯出檔名取自第一個標題 | `exportFileName()`：第一個 `# 標題` slug 化（清非法字元、空白轉連字號、截 60 字），fallback `markhash` | ✅ |
+| UX-5 | 匯入/拖放回饋 | toast `Imported <檔名>`；拖曳懸停時主容器虛線高亮（`body.drag-over`） | ✅ |
+
+- `CACHE_NAME` bump 至 `v6.14.18`（原則 4）。
+
 ## 未來待辦（Backlog，本次不處理）
 
 - 編輯器 `editor.value = ...` 直接賦值破壞原生 undo stack（Ctrl+Z 失效）→ 改用 `setRangeText` 或 `execCommand('insertText')`。
